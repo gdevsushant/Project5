@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "_Project_H/CC_BaseMovementStrategy.h"
 #include "_Project_H/CC_MovementInterface.h"
 #include "CC_MovementComponent.generated.h"
 
@@ -21,8 +22,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	void MovePawn(FVector Direction, float ScaleValue, bool bForce);
+	void Move(UCC_BaseMovementStrategy* MovementStrategy);
 
-	// Interfaces functions
-	virtual void RequestMovePawn_Implementation(FVector Direction, float ScaleValue, bool bForce) override;
+	virtual void RequestMove_Implementation(UCC_BaseMovementStrategy* MovementStrategy) override;
 };

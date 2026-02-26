@@ -1,4 +1,5 @@
 #include "_Project_H/CC_MovementComponent.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 UCC_MovementComponent::UCC_MovementComponent()
@@ -16,15 +17,20 @@ void UCC_MovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-void UCC_MovementComponent::MovePawn(FVector Direction, float ScaleValue, bool bForce)
+void UCC_MovementComponent::Move(UCC_BaseMovementStrategy* MovementStrategy)
 {
-	if (APawn* Owner = Cast<APawn>(GetOwner())) {
+	if (MovementStrategy) {
 
-		Owner->AddMovementInput(Direction, ScaleValue, bForce);
+		ACharacter* Character = Cast<ACharacter>(GetOwner());
+
+		if (Character) {
+
+			MovementStrategy->Move(Character);
+		}
 	}
 }
 
-void UCC_MovementComponent::RequestMovePawn_Implementation(FVector Direction, float ScaleValue, bool bForce)
+void UCC_MovementComponent::RequestMove_Implementation(UCC_BaseMovementStrategy* MovementStrategy)
 {
-	UE_LOG(LogActor, Log, TEXT("This is overriding text"));
+	UCC_MovementComponent::Move(MovementStrategy);
 }

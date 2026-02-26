@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "_Project_H/CC_BaseMovementStrategy.h"
+#include "_Project_H/CC_MovementInterface.h"
 #include "CC_BaseCharacter.generated.h"
 
 UCLASS()
@@ -22,4 +24,13 @@ public:
 public:
 	UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "InterfaceClass"), Category = "Base Character")
 	UObject* GetComponentInterface(TSubclassOf<UInterface> InterfaceClass);
+
+	UFUNCTION(BlueprintCallable, Category = "Base Character")
+	void Move(UCC_BaseMovementStrategy* MovementStrategy);
+
+protected:
+	void SetMovementInterface();
+
+protected:
+	TScriptInterface<ICC_MovementInterface> MovementInterface;
 };

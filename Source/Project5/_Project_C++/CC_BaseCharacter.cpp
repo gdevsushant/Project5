@@ -1,4 +1,5 @@
 #include "_Project_H/CC_BaseCharacter.h"
+#include "_Project_H/CC_MovementInterface.h"
 
 ACC_BaseCharacter::ACC_BaseCharacter()
 {
@@ -8,6 +9,8 @@ ACC_BaseCharacter::ACC_BaseCharacter()
 void ACC_BaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ACC_BaseCharacter::SetMovementInterface();
 }
 
 void ACC_BaseCharacter::Tick(float DeltaTime)
@@ -31,13 +34,7 @@ UObject* ACC_BaseCharacter::GetComponentInterface(TSubclassOf<UInterface> Interf
 
 			if (Components.Num() > 0) {
 
-				for (UActorComponent* Component : Components) {
-
-					if (Component) {
-
-						return Cast<UObject>(Component);
-					}
-				}
+				return Cast<UObject>(Components[0]);
 			}
 
 			return nullptr;
@@ -48,3 +45,22 @@ UObject* ACC_BaseCharacter::GetComponentInterface(TSubclassOf<UInterface> Interf
 
 	return nullptr;
 }
+
+void ACC_BaseCharacter::Move(UCC_BaseMovementStrategy* MovementStrategy)
+{
+	if (MovementInterface) {
+
+		MovementInterface->RequestMove(MovementStrategy);
+	}
+}
+
+void ACC_BaseCharacter::SetMovementInterface()
+{
+	UActorComponent* Comp = Cast<UActorComponent>(GetComponentInterface(UCC_MovementInterface::StaticClass()));
+
+	if (Comp) {
+
+		MovementInterface = TScriptInterface<ICC_MovementInterface>(Comp);
+	}
+}
+
