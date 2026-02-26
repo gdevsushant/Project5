@@ -17,7 +17,7 @@ class PROJECT5_API ICC_MovementInterface
 public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Movement")
-	void Move(FVector Direction, float ScaleValue, bool bForce);
+	void RequestMovePawn(FVector Direction, float ScaleValue, bool bForce);
 
-	virtual void Move_Implementation(FVector Direction, float ScaleValue, bool bForce);
+	virtual void RequestMovePawn_Implementation(FVector Direction, float ScaleValue, bool bForce);
 };

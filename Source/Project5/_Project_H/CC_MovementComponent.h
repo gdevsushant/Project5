@@ -21,7 +21,8 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	void Move(FVector Direction, float ScaleValue, bool bForce);
+	void MovePawn(FVector Direction, float ScaleValue, bool bForce);
 
-	virtual void Move_Implementation(FVector Direction, float ScaleValue, bool bForce) override;
+	// Interfaces functions
+	virtual void RequestMovePawn_Implementation(FVector Direction, float ScaleValue, bool bForce) override;
 };

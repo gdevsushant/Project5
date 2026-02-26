@@ -24,18 +24,23 @@ UObject* ACC_BaseCharacter::GetComponentInterface(TSubclassOf<UInterface> Interf
 {
 	if (InterfaceClass) {
 
-		TArray<UActorComponent*> Components;
-		Components = GetComponentsByInterface(InterfaceClass);
+		if (Owner) {
 
-		if (Components.Num() > 0) {
+			TArray<UActorComponent*> Components;
+			Components = Owner->GetComponentsByInterface(InterfaceClass);
 
-			for (UActorComponent* Component : Components) {
+			if (Components.Num() > 0) {
 
-				if (Component) {
+				for (UActorComponent* Component : Components) {
 
-					return Cast<UObject>(Component);
+					if (Component) {
+
+						return Cast<UObject>(Component);
+					}
 				}
 			}
+
+			return nullptr;
 		}
 
 		return nullptr;

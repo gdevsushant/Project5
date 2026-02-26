@@ -16,7 +16,7 @@ void UCC_MovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-void UCC_MovementComponent::Move(FVector Direction, float ScaleValue, bool bForce)
+void UCC_MovementComponent::MovePawn(FVector Direction, float ScaleValue, bool bForce)
 {
 	if (APawn* Owner = Cast<APawn>(GetOwner())) {
 
@@ -24,7 +24,7 @@ void UCC_MovementComponent::Move(FVector Direction, float ScaleValue, bool bForc
 	}
 }
 
-void UCC_MovementComponent::Move_Implementation(FVector Direction, float ScaleValue, bool bForce)
+void UCC_MovementComponent::RequestMovePawn_Implementation(FVector Direction, float ScaleValue, bool bForce)
 {
 	UE_LOG(LogActor, Log, TEXT("This is overriding text"));
 }
