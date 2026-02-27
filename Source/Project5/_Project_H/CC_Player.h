@@ -7,6 +7,10 @@
 UCLASS()
 class PROJECT5_API ACC_Player : public ACC_BaseCharacter
 {
-	GENERATED_BODY()	
+	GENERATED_BODY()
 
+	ACC_Player();
+
+protected:
+	virtual void BeginPlay() override;
 };

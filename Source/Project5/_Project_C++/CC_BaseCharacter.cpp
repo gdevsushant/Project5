@@ -9,7 +9,11 @@ ACC_BaseCharacter::ACC_BaseCharacter()
 void ACC_BaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
+void ACC_BaseCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 	ACC_BaseCharacter::SetMovementInterface();
 }
 
@@ -27,17 +31,12 @@ UObject* ACC_BaseCharacter::GetComponentInterface(TSubclassOf<UInterface> Interf
 {
 	if (InterfaceClass) {
 
-		if (Owner) {
+		TArray<UActorComponent*> Components;
+		Components = GetComponentsByInterface(InterfaceClass);
 
-			TArray<UActorComponent*> Components;
-			Components = Owner->GetComponentsByInterface(InterfaceClass);
+		if (Components.Num() > 0) {
 
-			if (Components.Num() > 0) {
-
-				return Cast<UObject>(Components[0]);
-			}
-
-			return nullptr;
+			return Cast<UObject>(Components[0]);
 		}
 
 		return nullptr;
@@ -50,7 +49,7 @@ void ACC_BaseCharacter::Move(UCC_BaseMovementStrategy* MovementStrategy)
 {
 	if (MovementInterface) {
 
-		MovementInterface->RequestMove(MovementStrategy);
+		MovementInterface->Execute_RequestMove(MovementInterface.GetObject(), MovementStrategy);
 	}
 }
 
@@ -63,4 +62,3 @@ void ACC_BaseCharacter::SetMovementInterface()
 		MovementInterface = TScriptInterface<ICC_MovementInterface>(Comp);
 	}
 }
-

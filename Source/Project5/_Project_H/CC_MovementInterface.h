@@ -5,7 +5,7 @@
 #include "_Project_H/CC_BaseMovementStrategy.h"
 #include "CC_MovementInterface.generated.h"
 
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI, BlueprintType)
 class UCC_MovementInterface : public UInterface
 {
 	GENERATED_BODY()
