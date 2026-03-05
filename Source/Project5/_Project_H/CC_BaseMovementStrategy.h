@@ -11,7 +11,7 @@ class PROJECT5_API UCC_BaseMovementStrategy : public UObject
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintNativeEvent, Category = "Movement Strategy")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Movement Strategy")
 	void Move(ACharacter* Character);
 
 	virtual void Move_Implementation(ACharacter* Character);

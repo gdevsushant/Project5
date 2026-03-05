@@ -13,5 +13,6 @@ public:
 	virtual void Move_Implementation(ACharacter* Character) override;
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Movement Strategy")
 	FVector Direction;
 };
