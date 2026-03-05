@@ -11,7 +11,7 @@ class UInputMappingContext;
 
 class UCC_TaggedInputActionsDataAsset;
 
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI, Blueprintable)
 class UCC_InputSystemInterface : public UInterface
 {
 	GENERATED_BODY()
