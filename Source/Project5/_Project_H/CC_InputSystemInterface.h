@@ -8,7 +8,6 @@
 #include "CC_InputSystemInterface.generated.h"
 
 class UInputMappingContext;
-
 class UCC_TaggedInputActionsDataAsset;
 
 UINTERFACE(MinimalAPI, Blueprintable)
@@ -29,10 +28,6 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Input System Interface")
 	void AddInputMappingContext(UInputMappingContext* InputMappingContext, int32 Priority);
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Input System Interface")
-	FGameplayTag GetInputTag();
-
 	virtual void SetInputDataAsset_Implementation(UCC_TaggedInputActionsDataAsset* DataAsset) = 0;
 	virtual void AddInputMappingContext_Implementation(UInputMappingContext* InputMappingContext, int32 Priority) = 0;
-	virtual FGameplayTag GetInputTag_Implementation() = 0;
 };

@@ -4,6 +4,7 @@
 #include "GameplayTagContainer.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
+#include "GameFramework/PlayerController.h"
 #include "_Project_H/CC_TaggedInputActionsDataAsset.h"
 #include "_Project_H/CC_TaggedInputActionsStructure.h"
 #include "NativeGameplayTags.h"
@@ -57,7 +58,9 @@ void UCC_InputComponent::BindAction(APlayerController* Requester)
 
 						if (Action.InputAction && Action.InputTag.IsValid()) {
 
-							EnhancedInputComponent->BindAction(Action.InputAction, Action.TriggerEvent, this, &UCC_InputComponent::OnInputRecieved, Action.InputTag, Requester);
+							EnhancedInputComponent->BindAction(Action.InputAction, Action.TriggerEvent, this, &UCC_InputComponent::OnInputRecievedMethod, Action.InputTag, Requester);
+							EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Completed, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
+							EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Canceled, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
 						}
 					}
 				}
@@ -66,16 +69,18 @@ void UCC_InputComponent::BindAction(APlayerController* Requester)
 	}
 }
 
-void UCC_InputComponent::OnInputRecieved(const FInputActionValue& Value, FGameplayTag InputTag, APlayerController* Requester)
+void UCC_InputComponent::OnInputRecievedMethod(const FInputActionValue& Value, FGameplayTag InputTag, APlayerController* Requester)
 {
 	if (InputTag.IsValid() && Requester) {
 
-		//UE_LOG(LogActor, Warning, TEXT("Input system is working fine...."));
-		//UE_LOG(LogActor, Warning, TEXT("GameplayTag:- %s"), *InputTag.ToString());
-		//UE_LOG(LogActor, Warning, TEXT("Requester Name:- %s"), *Requester->GetName());
-
-		ReturnInputTag(InputTag);
+		UE_LOG(LogActor, Warning, TEXT("Input is started or ongoing..."));
+		UCC_InputComponent::BroadcastInputReceivedDelegate(Requester, InputTag, Value);
 	}
+}
+
+void UCC_InputComponent::OnInputCompletedMethod(APlayerController* Requester, FGameplayTag InputTag)
+{
+	UE_LOG(LogActor, Warning, TEXT("Input is completed or canceled..."));
 }
 
 void UCC_InputComponent::InputDataAsset(UCC_TaggedInputActionsDataAsset* DataAsset)
@@ -114,23 +119,7 @@ void UCC_InputComponent::AddInputMappingContext_Implementation(UInputMappingCont
 	UCC_InputComponent::InputMappingContext(InputMappingContext, Priority);
 }
 
-void UCC_InputComponent::ReturnInputTag(FGameplayTag InputTag)
+void UCC_InputComponent::BroadcastInputReceivedDelegate(APlayerController* Requester, FGameplayTag InputTag, FInputActionValue Value)
 {
-	if (InputTag.IsValid()) {
-
-		ReturnedInputTag = InputTag;
-		return;
-	}
-
-	ReturnedInputTag = FGameplayTag::EmptyTag;
-}
-
-FGameplayTag UCC_InputComponent::GetInputTag_Implementation()
-{
-	if (ReturnedInputTag.IsValid()) {
-
-		return ReturnedInputTag;
-	}
-
-	return FGameplayTag::EmptyTag;
+	OnInputReceived.Broadcast(Requester, InputTag, Value);
 }
