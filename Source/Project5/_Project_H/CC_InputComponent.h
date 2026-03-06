@@ -41,18 +41,22 @@ protected:
 	APlayerController* GetPlayerController();
 	void InputDataAsset(UCC_TaggedInputActionsDataAsset* DataAsset);
 	void InputMappingContext(UInputMappingContext* InputMappingContext, int32 Priority);
-	void ReturnInputTag(FGameplayTag InputTag);
+	FGameplayTagContainer ReturnInputTag();
+	void AddInputTagInContainer(FGameplayTag InputTag);
+	void RemoveInputTagFromContainer(FGameplayTag InputTag);
 
 public:
 
 	void OnInputRecieved(const FInputActionValue& Value, FGameplayTag InputTag, APlayerController* Requester);
+	void OnInputCompleted(APlayerController* Requester, FGameplayTag InputTag);
 
 	virtual void SetInputDataAsset_Implementation(UCC_TaggedInputActionsDataAsset* DataAsset) override;
 	virtual void AddInputMappingContext_Implementation(UInputMappingContext* InputMappingContext, int32 Priority) override;
-	virtual FGameplayTag GetInputTag_Implementation() override;
+	virtual FGameplayTagContainer GetInputTagContainer_Implementation() override;
 
 protected:
 
 	UCC_TaggedInputActionsDataAsset* CurrentInputDataAsset;
 	FGameplayTag ReturnedInputTag = FGameplayTag::EmptyTag;
+	FGameplayTagContainer ReturnedInputTagContainer = FGameplayTagContainer::EmptyContainer;
 };

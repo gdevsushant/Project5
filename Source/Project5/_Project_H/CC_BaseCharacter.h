@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "_Project_H/CC_BaseMovementStrategy.h"
 #include "_Project_H/CC_MovementInterface.h"
+#include "NativeGameplayTags.h"
 #include "CC_BaseCharacter.generated.h"
 
 UCLASS()

@@ -30,9 +30,9 @@ public:
 	void AddInputMappingContext(UInputMappingContext* InputMappingContext, int32 Priority);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Input System Interface")
-	FGameplayTag GetInputTag();
+	FGameplayTagContainer GetInputTagContainer();
 
 	virtual void SetInputDataAsset_Implementation(UCC_TaggedInputActionsDataAsset* DataAsset) = 0;
 	virtual void AddInputMappingContext_Implementation(UInputMappingContext* InputMappingContext, int32 Priority) = 0;
-	virtual FGameplayTag GetInputTag_Implementation() = 0;
+	virtual FGameplayTagContainer GetInputTagContainer_Implementation() = 0;
 };

@@ -58,6 +58,8 @@ void UCC_InputComponent::BindAction(APlayerController* Requester)
 						if (Action.InputAction && Action.InputTag.IsValid()) {
 
 							EnhancedInputComponent->BindAction(Action.InputAction, Action.TriggerEvent, this, &UCC_InputComponent::OnInputRecieved, Action.InputTag, Requester);
+							EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Completed, this, &UCC_InputComponent::OnInputCompleted, Requester, Action.InputTag);
+							EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Canceled, this, &UCC_InputComponent::OnInputCompleted, Requester, Action.InputTag);
 						}
 					}
 				}
@@ -70,12 +72,15 @@ void UCC_InputComponent::OnInputRecieved(const FInputActionValue& Value, FGamepl
 {
 	if (InputTag.IsValid() && Requester) {
 
-		//UE_LOG(LogActor, Warning, TEXT("Input system is working fine...."));
-		//UE_LOG(LogActor, Warning, TEXT("GameplayTag:- %s"), *InputTag.ToString());
-		//UE_LOG(LogActor, Warning, TEXT("Requester Name:- %s"), *Requester->GetName());
-
-		ReturnInputTag(InputTag);
+		UE_LOG(LogActor, Warning, TEXT("Input is started or ongoing..."));
+		UCC_InputComponent::AddInputTagInContainer(InputTag);
 	}
+}
+
+void UCC_InputComponent::OnInputCompleted(APlayerController* Requester, FGameplayTag InputTag)
+{
+	UE_LOG(LogActor, Warning, TEXT("Input is completed or canceled..."));
+	RemoveInputTagFromContainer(InputTag);
 }
 
 void UCC_InputComponent::InputDataAsset(UCC_TaggedInputActionsDataAsset* DataAsset)
@@ -114,23 +119,36 @@ void UCC_InputComponent::AddInputMappingContext_Implementation(UInputMappingCont
 	UCC_InputComponent::InputMappingContext(InputMappingContext, Priority);
 }
 
-void UCC_InputComponent::ReturnInputTag(FGameplayTag InputTag)
+FGameplayTagContainer UCC_InputComponent::ReturnInputTag()
+{
+	if (ReturnedInputTagContainer.Num() > 0) {
+
+		return ReturnedInputTagContainer;
+	}
+
+	return FGameplayTagContainer::EmptyContainer;
+}
+
+FGameplayTagContainer UCC_InputComponent::GetInputTagContainer_Implementation()
+{
+	return UCC_InputComponent::ReturnInputTag();
+}
+
+void UCC_InputComponent::AddInputTagInContainer(FGameplayTag InputTag)
 {
 	if (InputTag.IsValid()) {
 
-		ReturnedInputTag = InputTag;
-		return;
+		ReturnedInputTagContainer.AddTag(InputTag);
 	}
-
-	ReturnedInputTag = FGameplayTag::EmptyTag;
 }
 
-FGameplayTag UCC_InputComponent::GetInputTag_Implementation()
+void UCC_InputComponent::RemoveInputTagFromContainer(FGameplayTag InputTag)
 {
-	if (ReturnedInputTag.IsValid()) {
+	if (InputTag.IsValid()) {
 
-		return ReturnedInputTag;
+		if (ReturnedInputTagContainer.HasTag(InputTag)) {
+
+			ReturnedInputTagContainer.RemoveTag(InputTag);
+		}
 	}
-
-	return FGameplayTag::EmptyTag;
 }
