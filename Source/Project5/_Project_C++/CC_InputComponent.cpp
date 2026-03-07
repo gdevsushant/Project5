@@ -7,6 +7,10 @@
 #include "GameFramework/PlayerController.h"
 #include "_Project_H/CC_TaggedInputActionsDataAsset.h"
 #include "_Project_H/CC_TaggedInputActionsStructure.h"
+#include "_Project_H/CC_BaseCharacter.h"
+#include "_Project_H/CC_CentralCommunicationDataStructure.h"
+#include "_Project_H/CC_CentralCommunicationInterface.h"
+#include "_Project_H/CC_CentralCommunicationSubsystem.h"
 #include "NativeGameplayTags.h"
 
 UCC_InputComponent::UCC_InputComponent()
@@ -18,6 +22,11 @@ void UCC_InputComponent::BeginPlay()
 {
 	Super::BeginPlay();	
 	ICC_InputSystemInterface::Execute_AddInputMappingContext(this, DefaultInputMappingContext, 0);
+	
+	if (DefaultInputDataAsset) {
+	
+		ICC_InputSystemInterface::Execute_SetInputDataAsset(this, DefaultInputDataAsset);
+	}
 }
 
 void UCC_InputComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -52,15 +61,22 @@ void UCC_InputComponent::BindAction(APlayerController* Requester)
 
 			if (EnhancedInputComponent) {
 
-				if (CurrentInputDataAsset) {
+				if (InputAsset) {
 
-					for (const FTaggedInputAction& Action : CurrentInputDataAsset->TaggedInputActions) {
+					if (InputAsset->TaggedInputActions.Num() > 0) {
 
-						if (Action.InputAction && Action.InputTag.IsValid()) {
+						for (const auto& Action : InputAsset->TaggedInputActions) {
 
-							EnhancedInputComponent->BindAction(Action.InputAction, Action.TriggerEvent, this, &UCC_InputComponent::OnInputRecievedMethod, Action.InputTag, Requester);
-							EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Completed, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
-							EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Canceled, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
+							if (Action.InputAction && Action.InputTag.IsValid()) {
+
+								UCC_InputComponent::RegisterCentralMessageListener(Action.InputTag);
+								EnhancedInputComponent->BindAction(Action.InputAction, Action.TriggerEvent, this, &UCC_InputComponent::OnInputRecievedMethod, Action.InputTag, Requester);
+								EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Completed, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
+								EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Canceled, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
+								continue;
+							}
+
+							continue;
 						}
 					}
 				}
@@ -73,21 +89,28 @@ void UCC_InputComponent::OnInputRecievedMethod(const FInputActionValue& Value, F
 {
 	if (InputTag.IsValid() && Requester) {
 
-		UE_LOG(LogActor, Warning, TEXT("Input is started or ongoing..."));
-		UCC_InputComponent::BroadcastInputReceivedDelegate(Requester, InputTag, Value);
+		//UE_LOG(LogActor, Warning, TEXT("Input is started or ongoing..."));
+		FUniversalCommunicationMessage InputMessage;
+		InputMessage.Sender = this;
+		InputMessage.Tag = InputTag;
+
+		UCC_InputComponent::BroadcastCentralMessage(InputMessage);
+		return;
 	}
+
+	return;
 }
 
 void UCC_InputComponent::OnInputCompletedMethod(APlayerController* Requester, FGameplayTag InputTag)
 {
-	UE_LOG(LogActor, Warning, TEXT("Input is completed or canceled..."));
+	//UE_LOG(LogActor, Warning, TEXT("Input is completed or canceled..."));
 }
 
 void UCC_InputComponent::InputDataAsset(UCC_TaggedInputActionsDataAsset* DataAsset)
 {
 	if (DataAsset) {
 
-		CurrentInputDataAsset = DataAsset;
+		InputAsset = DataAsset;
 
 		if (APlayerController* PlayerController = GetPlayerController()) {
 
@@ -109,6 +132,16 @@ APlayerController* UCC_InputComponent::GetPlayerController()
 	return nullptr;
 }
 
+ACharacter* UCC_InputComponent::GetCharacter()
+{
+	if (ACharacter* Character = (UCC_InputComponent::GetPlayerController()->GetCharacter())) {
+
+		return Character;
+	}
+
+	return nullptr;
+}
+
 void UCC_InputComponent::SetInputDataAsset_Implementation(UCC_TaggedInputActionsDataAsset* DataAsset)
 {
 	UCC_InputComponent::InputDataAsset(DataAsset);
@@ -119,7 +152,19 @@ void UCC_InputComponent::AddInputMappingContext_Implementation(UInputMappingCont
 	UCC_InputComponent::InputMappingContext(InputMappingContext, Priority);
 }
 
-void UCC_InputComponent::BroadcastInputReceivedDelegate(APlayerController* Requester, FGameplayTag InputTag, FInputActionValue Value)
+void UCC_InputComponent::BroadcastCentralMessage(FUniversalCommunicationMessage& Message)
 {
-	OnInputReceived.Broadcast(Requester, InputTag, Value);
+	UCC_CentralCommunicationSubsystem::BroadcastCentralCommunicationMessage(this, Message.Tag, Message);
+}
+
+void UCC_InputComponent::RegisterCentralMessageListener(FGameplayTag Channel)
+{
+	UCC_CentralCommunicationSubsystem::RegisterListener(this, this, Channel)->CentralMessageDelegate.AddUniqueDynamic(this, &UCC_InputComponent::OnCentralMessageReceived);
+	return;
+}
+
+void UCC_InputComponent::OnCentralMessageReceived(FUniversalCommunicationMessage Message)
+{
+	UE_LOG(LogActor, Log, TEXT("Central Message Received"));
+	UE_LOG(LogActor, Log, TEXT("Current Tag:- %s"), *Message.Tag.ToString());
 }

@@ -12,5 +12,4 @@ class PROJECT5_API ACC_BasePlayerController : public APlayerController
 protected:
 
 	virtual void OnPossess(APawn* aPawn) override;
-	virtual void SetupInputComponent() override;
 };

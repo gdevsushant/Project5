@@ -4,11 +4,15 @@
 #include "GameFramework/Character.h"
 #include "_Project_H/CC_BaseMovementStrategy.h"
 #include "_Project_H/CC_MovementInterface.h"
+#include "_Project_H/CC_CentralCommunicationInterface.h"
+#include "_Project_H/CC_CentralCommunicationDataStructure.h"
 #include "NativeGameplayTags.h"
 #include "CC_BaseCharacter.generated.h"
 
+class UCC_CentralMessageValueDataAsset;
+
 UCLASS()
-class PROJECT5_API ACC_BaseCharacter : public ACharacter
+class PROJECT5_API ACC_BaseCharacter : public ACharacter, public ICC_CentralCommunicationInterface
 {
 	GENERATED_BODY()
 
