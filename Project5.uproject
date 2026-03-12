@@ -12,7 +12,13 @@
 				"Engine",
 				"CoreUObject"
 			]
-		}
+		},
+
+		{
+            		"Name": "Project5Editor",
+            		"Type": "UncookedOnly",
+            		"LoadingPhase": "PostEngineInit"
+        	}
 	],
 	"Plugins": [
 		{

@@ -11,6 +11,5 @@ struct FMessageData
 public:
 
 	TWeakObjectPtr<UObject> ListenerObject;
-	UScriptStruct* StructureDataType;
 	int32 HandleId;
 };

@@ -5,7 +5,7 @@
 #include "InputActionValue.h"
 #include "CC_CentralCommunicationDataStructure.generated.h"
 
-USTRUCT(BlueprintType, Blueprintable)
+USTRUCT(BlueprintType)
 struct FUniversalCommunicationMessage
 {
 	GENERATED_BODY()
@@ -19,5 +19,5 @@ public:
 	FGameplayTag Tag = FGameplayTag::EmptyTag;
 
 	UPROPERTY(BlueprintReadWrite)
-	float FloatValue = 0;
+	FInputActionValue InputValue;
 };
