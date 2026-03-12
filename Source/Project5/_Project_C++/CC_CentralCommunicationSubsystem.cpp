@@ -4,7 +4,7 @@
 #include "_Project_H/CC_CentralCommunicationDataStructure.h"
 #include "_Project_H/CC_GameplayMessageListenerList.h"
 
-void UCC_CentralCommunicationSubsystem::BroadcastCentralCommunicationMessage(const UObject* WorldContextObject, FGameplayTag Channel, FUniversalCommunicationMessage Message)
+void UCC_CentralCommunicationSubsystem::BroadcastCentralCommunicationMessage(const UObject* WorldContextObject, FGameplayTag Channel)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert);
 	UCC_CentralCommunicationSubsystem* Subsystem = World->GetSubsystem<UCC_CentralCommunicationSubsystem>();
@@ -15,32 +15,31 @@ void UCC_CentralCommunicationSubsystem::BroadcastCentralCommunicationMessage(con
 
 			if (Channel.IsValid() && Subsystem->ListenersMap.Num() > 0) {
 
-				if (FMessageList* MessageListPtr = Subsystem->ListenersMap.Find(Channel)) {
+				if (UCC_GameplayMessageListenerList** MessageListPtrPtr = Subsystem->ListenersMap.Find(Channel)) {
 
-					for (int32 i = MessageListPtr->Listeners.Num() - 1; i >= 0; i--) {
+					if (UCC_GameplayMessageListenerList* MessageListPtr = *MessageListPtrPtr) {
 
-						if (MessageListPtr->Listeners.IsValidIndex(i)) {
+						for (int32 i = MessageListPtr->Listeners.Num() - 1; i >= 0; i--) {
 
-							if (MessageListPtr->Listeners[i].ListenerObject.Get()) {
+							if (MessageListPtr->Listeners.IsValidIndex(i)) {
 
-								if (Message.Sender.IsValid() && Message.Sender.Get() && Message.Tag.IsValid()) {
+								if (!MessageListPtr->Listeners[i].ListenerObject.Get()) {
 
-									UE_LOG(LogActor, Log, TEXT("Broadcasting message"));
-									Subsystem->CentralMessageDelegate.Broadcast(Message);
+									MessageListPtr->Listeners.RemoveAt(i);
+									continue;
 								}
 
 								continue;
 							}
 
-							else {
-
-								MessageListPtr->Listeners.RemoveAt(i);
-								continue;
-							}
+							continue;
 						}
 
-						continue;
+						MessageListPtr->CentralMessageDelegate.Broadcast();
+						goto FUNCTION_END;
 					}
+
+					goto FUNCTION_END;
 				}
 
 				goto FUNCTION_END;
@@ -58,40 +57,41 @@ void UCC_CentralCommunicationSubsystem::BroadcastCentralCommunicationMessage(con
 		return;
 }
 
-UCC_CentralCommunicationSubsystem* UCC_CentralCommunicationSubsystem::RegisterListener(const UObject* WorldContextObject, UObject* Listener, FGameplayTag Channel)
+UCC_GameplayMessageListenerList* UCC_CentralCommunicationSubsystem::RegisterListener(const UObject* WorldContextObject, UObject* Listener, FGameplayTag Channel)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert);
 	UCC_CentralCommunicationSubsystem* Subsystem = World->GetSubsystem<UCC_CentralCommunicationSubsystem>();
 
-	if (World) {
+	if (!World) return nullptr;
+	if (!Subsystem) return nullptr;
+	if (!Channel.IsValid()) return nullptr;
+	if (!Listener) return nullptr;
 
-		if (Subsystem) {
+	UCC_GameplayMessageListenerList* List = NewObject<UCC_GameplayMessageListenerList>(Subsystem);
+	FMessageData Data;
+	Data.ListenerObject = Listener;
+	Data.HandleId = Subsystem->HandleIdCounter;
+	List->Listeners.Add(Data);
 
-			FMessageList List;
-			FMessageData Data;
-			Data.ListenerObject = Listener;
-			Data.HandleId = Subsystem->HandleIdCounter;
-			List.Listeners.Add(Data);
 
-			if (Subsystem->ListenersMap.Find(Channel)) {
+	if (UCC_GameplayMessageListenerList** MessageListPtrPtr = Subsystem->ListenersMap.Find(Channel)) {
 
-				FMessageList* GetList = Subsystem->ListenersMap.Find(Channel);
-				GetList->Listeners.Add(Data);
-			}
+		if (UCC_GameplayMessageListenerList* MessageListPtr = *MessageListPtrPtr) {
 
-			else {
-
-				Subsystem->ListenersMap.Emplace(Channel, List);
-			}
-
+			MessageListPtr->Listeners.Add(Data);
 			Subsystem->HandleIdCounter++;
-			return Subsystem;
+			return MessageListPtr;
 		}
 
 		return nullptr;
 	}
 
-	return nullptr;
+	else {
+
+		Subsystem->ListenersMap.Add(Channel, List);
+		Subsystem->HandleIdCounter++;
+		return List;
+	}
 }
 
 void UCC_CentralCommunicationSubsystem::UnRegisterListener(const UObject* WorldContextObject, FGameplayTag Channel)
@@ -105,16 +105,62 @@ void UCC_CentralCommunicationSubsystem::UnRegisterListener(const UObject* WorldC
 
 			if (Channel.IsValid()) {
 
-				if (Subsystem->ListenersMap.Find(Channel)) {
+				if (UCC_GameplayMessageListenerList** MessageListPtrPtr = Subsystem->ListenersMap.Find(Channel)) {
 
-					Subsystem->ListenersMap.Remove(Channel);
-					//UE_LOG(LogActor, Log, TEXT("Length of listener map:- %d"), Subsystem->ListenersMap.Num());
+					if (UCC_GameplayMessageListenerList* MessageListPtr = *MessageListPtrPtr) {
+
+						Subsystem->ListenersMap.Remove(Channel);
+					}
+
+					return;
 				}
+
+				return;
 			}
+
+			return;
 		}
 
 		return;
 	}
 
 	return;
+}
+
+bool UCC_CentralCommunicationSubsystem::HasListenerRegistered(const UObject* WorldContextObject, FGameplayTag Channel)
+{
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert);
+	UCC_CentralCommunicationSubsystem* Subsystem = World->GetSubsystem<UCC_CentralCommunicationSubsystem>();
+
+	if (World) {
+
+		if (Subsystem) {
+
+			if (Channel.IsValid()) {
+
+				if (UCC_GameplayMessageListenerList** FoundList = Subsystem->ListenersMap.Find(Channel)) {
+
+					if (Subsystem->ListenersMap.Num() > 0) {
+
+						if (FoundList && *FoundList) {
+
+							return true;
+						}
+
+						return false;
+					}
+
+					return false;
+				}
+
+				return false;
+			}
+
+			return false;
+		}
+
+		return false;
+	}
+
+	return false;
 }

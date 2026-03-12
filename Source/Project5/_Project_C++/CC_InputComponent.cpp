@@ -11,6 +11,8 @@
 #include "_Project_H/CC_CentralCommunicationDataStructure.h"
 #include "_Project_H/CC_CentralCommunicationInterface.h"
 #include "_Project_H/CC_CentralCommunicationSubsystem.h"
+#include "Project5RuntimeLibrary.h"
+#include "Project5EditorDynamicDataStructure.h"
 #include "NativeGameplayTags.h"
 
 UCC_InputComponent::UCC_InputComponent()
@@ -21,8 +23,9 @@ UCC_InputComponent::UCC_InputComponent()
 void UCC_InputComponent::BeginPlay()
 {
 	Super::BeginPlay();	
+
 	ICC_InputSystemInterface::Execute_AddInputMappingContext(this, DefaultInputMappingContext, 0);
-	
+
 	if (DefaultInputDataAsset) {
 	
 		ICC_InputSystemInterface::Execute_SetInputDataAsset(this, DefaultInputDataAsset);
@@ -69,7 +72,6 @@ void UCC_InputComponent::BindAction(APlayerController* Requester)
 
 							if (Action.InputAction && Action.InputTag.IsValid()) {
 
-								UCC_InputComponent::RegisterCentralMessageListener(Action.InputTag);
 								EnhancedInputComponent->BindAction(Action.InputAction, Action.TriggerEvent, this, &UCC_InputComponent::OnInputRecievedMethod, Action.InputTag, Requester);
 								EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Completed, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
 								EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Canceled, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
@@ -93,8 +95,10 @@ void UCC_InputComponent::OnInputRecievedMethod(const FInputActionValue& Value, F
 		FUniversalCommunicationMessage InputMessage;
 		InputMessage.Sender = this;
 		InputMessage.Tag = InputTag;
+		InputMessage.InputValue = Value;
 
-		UCC_InputComponent::BroadcastCentralMessage(InputMessage);
+		UProject5RuntimeLibrary::SetValue<FUniversalCommunicationMessage>(InputTag, InputMessage);
+		UCC_InputComponent::BroadcastCentralMessage(InputTag);
 		return;
 	}
 
@@ -152,9 +156,9 @@ void UCC_InputComponent::AddInputMappingContext_Implementation(UInputMappingCont
 	UCC_InputComponent::InputMappingContext(InputMappingContext, Priority);
 }
 
-void UCC_InputComponent::BroadcastCentralMessage(FUniversalCommunicationMessage& Message)
+void UCC_InputComponent::BroadcastCentralMessage(FGameplayTag& Channel)
 {
-	UCC_CentralCommunicationSubsystem::BroadcastCentralCommunicationMessage(this, Message.Tag, Message);
+	UCC_CentralCommunicationSubsystem::BroadcastCentralCommunicationMessage(this, Channel);
 }
 
 void UCC_InputComponent::RegisterCentralMessageListener(FGameplayTag Channel)
@@ -163,8 +167,7 @@ void UCC_InputComponent::RegisterCentralMessageListener(FGameplayTag Channel)
 	return;
 }
 
-void UCC_InputComponent::OnCentralMessageReceived(FUniversalCommunicationMessage Message)
+void UCC_InputComponent::OnCentralMessageReceived()
 {
 	UE_LOG(LogActor, Log, TEXT("Central Message Received"));
-	UE_LOG(LogActor, Log, TEXT("Current Tag:- %s"), *Message.Tag.ToString());
 }

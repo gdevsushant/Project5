@@ -47,7 +47,7 @@ protected:
 	ACharacter* GetCharacter();
 	void InputDataAsset(UCC_TaggedInputActionsDataAsset* DataAsset);
 	void InputMappingContext(UInputMappingContext* InputMappingContext, int32 Priority);
-	void BroadcastCentralMessage(FUniversalCommunicationMessage& Message);
+	void BroadcastCentralMessage(FGameplayTag& Channel);
 	void RegisterCentralMessageListener(FGameplayTag Channel);
 
 public:
@@ -56,7 +56,7 @@ public:
 	void OnInputCompletedMethod(APlayerController* Requester, FGameplayTag InputTag);
 
 	UFUNCTION()
-	void OnCentralMessageReceived(FUniversalCommunicationMessage Message);
+	void OnCentralMessageReceived();
 
 	virtual void SetInputDataAsset_Implementation(UCC_TaggedInputActionsDataAsset* DataAsset) override;
 	virtual void AddInputMappingContext_Implementation(UInputMappingContext* InputMappingContext, int32 Priority) override;
