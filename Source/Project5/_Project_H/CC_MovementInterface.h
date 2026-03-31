@@ -16,8 +16,8 @@ class PROJECT5_API ICC_MovementInterface
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintNativeEvent, Category = "Movement Interface", meta = (BlueprintProtected))
-	void RequestMove(UCC_BaseMovementStrategy* MovementStrategy);
+	UFUNCTION(BlueprintNativeEvent, Category = "Movement Interface", BlueprintCallable)
+	void Move(UCC_BaseMovementStrategy* MovementStrategy);
 
-	virtual void RequestMove_Implementation(UCC_BaseMovementStrategy* MovementStrategy) = 0;
+	virtual void Move_Implementation(UCC_BaseMovementStrategy* MovementStrategy) = 0;
 };

@@ -1,3 +1,4 @@
+
 #include "_Project_H/CC_MovementComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -10,6 +11,7 @@ UCC_MovementComponent::UCC_MovementComponent()
 void UCC_MovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
 }
 
 void UCC_MovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -30,7 +32,7 @@ void UCC_MovementComponent::Move(UCC_BaseMovementStrategy* MovementStrategy)
 	}
 }
 
-void UCC_MovementComponent::RequestMove_Implementation(UCC_BaseMovementStrategy* MovementStrategy)
+void UCC_MovementComponent::Move_Implementation(UCC_BaseMovementStrategy* MovementStrategy)
 {
 	UCC_MovementComponent::Move(MovementStrategy);
 }

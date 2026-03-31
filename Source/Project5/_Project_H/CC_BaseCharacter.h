@@ -26,17 +26,4 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-public:
-	UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "InterfaceClass"), Category = "Base Character")
-	UObject* GetComponentInterface(TSubclassOf<UInterface> InterfaceClass);
-
-	UFUNCTION(BlueprintCallable, Category = "Base Character")
-	void Move(UCC_BaseMovementStrategy* MovementStrategy);
-
-protected:
-	void SetMovementInterface();
-
-protected:
-	TScriptInterface<ICC_MovementInterface> MovementInterface;
 };

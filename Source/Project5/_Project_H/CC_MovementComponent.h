@@ -24,5 +24,5 @@ public:
 public:
 	void Move(UCC_BaseMovementStrategy* MovementStrategy);
 
-	virtual void RequestMove_Implementation(UCC_BaseMovementStrategy* MovementStrategy) override;
+	virtual void Move_Implementation(UCC_BaseMovementStrategy* MovementStrategy) override;
 };
