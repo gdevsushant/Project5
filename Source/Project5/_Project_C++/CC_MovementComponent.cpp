@@ -21,14 +21,13 @@ void UCC_MovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 
 void UCC_MovementComponent::Move(UCC_BaseMovementStrategy* MovementStrategy)
 {
-	if (MovementStrategy) {
+	if (!MovementStrategy) return;
 
-		ACharacter* Character = Cast<ACharacter>(GetOwner());
+	ACharacter* Character = Cast<ACharacter>(GetOwner());
 
-		if (Character) {
+	if (Character) {
 
-			MovementStrategy->Move(Character);
-		}
+		MovementStrategy->Move(Character);
 	}
 }
 

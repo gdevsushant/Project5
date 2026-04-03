@@ -22,12 +22,12 @@ UCC_InputComponent::UCC_InputComponent()
 
 void UCC_InputComponent::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
 
 	ICC_InputSystemInterface::Execute_AddInputMappingContext(this, DefaultInputMappingContext, 0);
 
 	if (DefaultInputDataAsset) {
-	
+
 		ICC_InputSystemInterface::Execute_SetInputDataAsset(this, DefaultInputDataAsset);
 	}
 }
@@ -39,51 +39,41 @@ void UCC_InputComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 void UCC_InputComponent::InputMappingContext(UInputMappingContext* InputMappingContext, int32 Priority)
 {
-	if (InputMappingContext) {
+	if (!InputMappingContext)
+		return;
 
-		if (APlayerController* PlayerController = GetPlayerController()) {
+	APlayerController* PlayerController = GetPlayerController();
+	if (!PlayerController)
+		return;
 
-			if (ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer()) {
+	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
+	if (!LocalPlayer)
+		return;
 
-				if (UEnhancedInputLocalPlayerSubsystem* PlayerSubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer)) {
+	UEnhancedInputLocalPlayerSubsystem* PlayerSubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
+	if (!PlayerSubSystem)
+		return;
 
-					PlayerSubSystem->AddMappingContext(InputMappingContext, Priority);
-				}
-			}
-		}
-	}
+	PlayerSubSystem->AddMappingContext(InputMappingContext, Priority);
 }
 
 void UCC_InputComponent::BindAction(APlayerController* Requester)
 {
-	if (APlayerController* PlayerController = GetPlayerController()) {
+	APlayerController* PlayerController = GetPlayerController();
+	if (!PlayerController || !PlayerController->InputComponent)
+		return;
 
-		if (PlayerController->InputComponent) {
+	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent);
+	if (!EnhancedInputComponent || !InputAsset || InputAsset->TaggedInputActions.Num() == 0)
+		return;
 
-			UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent);
+	for (const auto& Action : InputAsset->TaggedInputActions) {
+		if (!Action.InputAction || !Action.InputTag.IsValid())
+			continue;
 
-			if (EnhancedInputComponent) {
-
-				if (InputAsset) {
-
-					if (InputAsset->TaggedInputActions.Num() > 0) {
-
-						for (const auto& Action : InputAsset->TaggedInputActions) {
-
-							if (Action.InputAction && Action.InputTag.IsValid()) {
-
-								EnhancedInputComponent->BindAction(Action.InputAction, Action.TriggerEvent, this, &UCC_InputComponent::OnInputRecievedMethod, Action.InputTag, Requester);
-								EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Completed, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
-								EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Canceled, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
-								continue;
-							}
-
-							continue;
-						}
-					}
-				}
-			}
-		}
+		EnhancedInputComponent->BindAction(Action.InputAction, Action.TriggerEvent, this, &UCC_InputComponent::OnInputRecievedMethod, Action.InputTag, Requester);
+		EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Completed, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
+		EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Canceled, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
 	}
 }
 
@@ -97,33 +87,44 @@ void UCC_InputComponent::OnInputRecievedMethod(const FInputActionValue& Value, F
 		InputMessage.Tag = InputTag;
 		InputMessage.InputValue = Value;
 
+		if (bool IsRegistered = UCC_CentralCommunicationSubsystem::HasListenerRegistered(this, InputTag) == false) {
+
+			//UCC_InputComponent::RegisterCentralMessageListener(InputTag);
+			UE_LOG(LogActor, Log, TEXT("Registered the listener successfully"));
+		}
+
 		UProject5RuntimeLibrary::SetValue<FUniversalCommunicationMessage>(InputTag, InputMessage);
 		UCC_InputComponent::BroadcastCentralMessage(InputTag);
+
 		return;
 	}
 
 	return;
 }
 
-void UCC_InputComponent::OnInputCompletedMethod(APlayerController* Requester, FGameplayTag InputTag)
+void UCC_InputComponent::OnInputCompletedMethod(const FInputActionValue& Value, APlayerController* Requester, FGameplayTag InputTag)
 {
 	//UE_LOG(LogActor, Warning, TEXT("Input is completed or canceled..."));
+	FUniversalCommunicationMessage InputMessage;
+	InputMessage.Sender = this;
+	InputMessage.InputValue = FInputActionValue(); // Reset the input value
+
+	UProject5RuntimeLibrary::SetValue<FUniversalCommunicationMessage>(InputTag, InputMessage);
+
 }
 
 void UCC_InputComponent::InputDataAsset(UCC_TaggedInputActionsDataAsset* DataAsset)
 {
-	if (DataAsset) {
+	if (!DataAsset)
+		return;
 
-		InputAsset = DataAsset;
+	InputAsset = DataAsset;
 
-		if (APlayerController* PlayerController = GetPlayerController()) {
+	APlayerController* PlayerController = GetPlayerController();
+	if (!PlayerController || !PlayerController->InputComponent)
+		return;
 
-			if (PlayerController->InputComponent) {
-
-				BindAction(PlayerController);
-			}
-		}
-	}
+	BindAction(PlayerController);
 }
 
 APlayerController* UCC_InputComponent::GetPlayerController()
@@ -138,12 +139,11 @@ APlayerController* UCC_InputComponent::GetPlayerController()
 
 ACharacter* UCC_InputComponent::GetCharacter()
 {
-	if (ACharacter* Character = (UCC_InputComponent::GetPlayerController()->GetCharacter())) {
+	APlayerController* PlayerController = GetPlayerController();
+	if (!PlayerController)
+		return nullptr;
 
-		return Character;
-	}
-
-	return nullptr;
+	return PlayerController->GetCharacter();
 }
 
 void UCC_InputComponent::SetInputDataAsset_Implementation(UCC_TaggedInputActionsDataAsset* DataAsset)
@@ -163,11 +163,17 @@ void UCC_InputComponent::BroadcastCentralMessage(FGameplayTag& Channel)
 
 void UCC_InputComponent::RegisterCentralMessageListener(FGameplayTag Channel)
 {
-	UCC_CentralCommunicationSubsystem::RegisterListener(this, this, Channel)->CentralMessageDelegate.AddUniqueDynamic(this, &UCC_InputComponent::OnCentralMessageReceived);
-	return;
+	auto* Listener = UCC_CentralCommunicationSubsystem::RegisterListener(this, this, Channel);
+	if (!Listener) {
+		UE_LOG(LogActor, Log, TEXT("Central Message Delegate is not valid..."));
+		return;
+	}
+
+	Listener->CentralMessageDelegate.AddUniqueDynamic(this, &UCC_InputComponent::OnCentralMessageReceived);
 }
 
 void UCC_InputComponent::OnCentralMessageReceived()
 {
 	UE_LOG(LogActor, Log, TEXT("Central Message Received"));
 }
+

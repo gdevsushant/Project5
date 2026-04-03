@@ -53,7 +53,7 @@ protected:
 public:
 
 	void OnInputRecievedMethod(const FInputActionValue& Value, FGameplayTag InputTag, APlayerController* Requester);
-	void OnInputCompletedMethod(APlayerController* Requester, FGameplayTag InputTag);
+	void OnInputCompletedMethod(const FInputActionValue& Value, APlayerController* Requester, FGameplayTag InputTag);
 
 	UFUNCTION()
 	void OnCentralMessageReceived();
