@@ -1,3 +1,9 @@
+/*
+	Base data asset for input actions
+
+	Store input actions of the game
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"

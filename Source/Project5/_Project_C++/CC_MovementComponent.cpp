@@ -27,6 +27,7 @@ void UCC_MovementComponent::Move(UCC_BaseMovementStrategy* MovementStrategy)
 
 	if (Character) {
 
+		// Executing movement strategy movement logic
 		MovementStrategy->Move(Character);
 	}
 }

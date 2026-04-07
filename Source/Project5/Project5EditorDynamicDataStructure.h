@@ -1,11 +1,18 @@
+/*
+	Project5 Editor Runtime Library
+	
+	Provides static helper functions, data for global storage, checker functions
+	
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
+#include "NativeGameplayTags.h"
 #include "Project5EditorDynamicDataStructure.generated.h"
 
 UENUM(BlueprintType)
-enum class EDynamicDataCategory : uint8
+enum class EDynamicDataCategory : uint8 // Category(enum) of input data
 {
 	Primitive,
 	Struct,
@@ -22,26 +29,26 @@ struct FDynamicValue
 	TArray<uint8> Data;
 
 	UPROPERTY()
-	EDynamicDataCategory Category = EDynamicDataCategory::Primitive;
+	EDynamicDataCategory Category = EDynamicDataCategory::Primitive; // Category of input data
 
 	UPROPERTY()
-	TObjectPtr<UScriptStruct> StructValue = nullptr;
+	TObjectPtr<UScriptStruct> StructValue = nullptr; // Validate the input data to struct and cache it
 
 	UPROPERTY()
-	TObjectPtr<UObject> ObjectValue = nullptr;
+	TObjectPtr<UObject> ObjectValue = nullptr; // Validate the input data to object and cache it
 
 	UPROPERTY()
-	TObjectPtr<UClass> ClassValue = nullptr;
+	TObjectPtr<UClass> ClassValue = nullptr; // Validate the input data to class and cache it
 
 	UPROPERTY()
-	FName TypeName;
+	FName TypeName; // Alias for type of data
 
-	bool IsValid() const
+	bool IsValid() const // Is data valid?
 	{
 		return (Data.Num() > 0 || ObjectValue != nullptr);
 	}
 
-	void Clear()
+	void Clear() // Clear temporary containers
 	{
 		if (Category == EDynamicDataCategory::Struct && StructValue && Data.Num() > 0)
 		{
@@ -55,5 +62,5 @@ struct FDynamicValue
 		TypeName = NAME_None;
 	}
 
-	FDynamicValue() {}
+	FDynamicValue() {} // Empty constructor
 };

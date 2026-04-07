@@ -1,3 +1,9 @@
+/*
+	Bridge btw developer and input component
+
+	A public unified-interface to set up input system default data
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -22,9 +28,11 @@ class PROJECT5_API ICC_InputSystemInterface
 
 public:
 
+	// Blueprint/C++ hook to active custom-chosen input data asset
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Input System Interface")
 	void SetInputDataAsset(UCC_TaggedInputActionsDataAsset* DataAsset);
-
+	
+	// Blueprint/C++ hook to add input mapping context with specified priority
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Input System Interface")
 	void AddInputMappingContext(UInputMappingContext* InputMappingContext, int32 Priority);
 

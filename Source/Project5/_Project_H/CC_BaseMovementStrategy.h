@@ -1,3 +1,10 @@
+/*
+	Movement Strategy Base Object
+
+	Orchestrates logic for various character movement types
+	Supports per instance configs
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -11,6 +18,7 @@ class PROJECT5_API UCC_BaseMovementStrategy : public UObject
 	GENERATED_BODY()
 
 public:
+	// Blueprint/C++ hook invoked by movement component
 	UFUNCTION(BlueprintNativeEvent, Category = "Movement Strategy")
 	void Move(ACharacter* Character);
 

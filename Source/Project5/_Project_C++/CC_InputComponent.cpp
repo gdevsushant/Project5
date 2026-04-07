@@ -1,7 +1,6 @@
 #include "_Project_H/CC_InputComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "GameplayTagContainer.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
 #include "GameFramework/PlayerController.h"
@@ -28,7 +27,7 @@ void UCC_InputComponent::BeginPlay()
 
 	if (DefaultInputDataAsset) {
 
-		ICC_InputSystemInterface::Execute_SetInputDataAsset(this, DefaultInputDataAsset);
+		ICC_InputSystemInterface::Execute_SetInputDataAsset(this, DefaultInputDataAsset); // Exectues function to active a custom chosen input data asset
 	}
 }
 
@@ -71,6 +70,8 @@ void UCC_InputComponent::BindAction(APlayerController* Requester)
 		if (!Action.InputAction || !Action.InputTag.IsValid())
 			continue;
 
+		// Binds input assets through data-driven actions through data asset
+		// Defaults bound to 'Completed' & 'Canceled' to prevent redundant actions entry
 		EnhancedInputComponent->BindAction(Action.InputAction, Action.TriggerEvent, this, &UCC_InputComponent::OnInputRecievedMethod, Action.InputTag, Requester);
 		EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Completed, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
 		EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Canceled, this, &UCC_InputComponent::OnInputCompletedMethod, Requester, Action.InputTag);
@@ -87,13 +88,16 @@ void UCC_InputComponent::OnInputRecievedMethod(const FInputActionValue& Value, F
 		InputMessage.Tag = InputTag;
 		InputMessage.InputValue = Value;
 
-		if (bool IsRegistered = UCC_CentralCommunicationSubsystem::HasListenerRegistered(this, InputTag) == false) {
+		if (const bool IsRegistered = UCC_CentralCommunicationSubsystem::HasListenerRegistered(this, InputTag) == false) { // Checks for existing binding
 
 			//UCC_InputComponent::RegisterCentralMessageListener(InputTag);
 			UE_LOG(LogActor, Log, TEXT("Registered the listener successfully"));
 		}
 
+		// Cache input value to global storage
 		UProject5RuntimeLibrary::SetValue<FUniversalCommunicationMessage>(InputTag, InputMessage);
+
+		// Dispatches input events to all active listeners
 		UCC_InputComponent::BroadcastCentralMessage(InputTag);
 
 		return;
@@ -109,6 +113,7 @@ void UCC_InputComponent::OnInputCompletedMethod(const FInputActionValue& Value, 
 	InputMessage.Sender = this;
 	InputMessage.InputValue = FInputActionValue(); // Reset the input value
 
+	// Cache input value to global storage when input is finished
 	UProject5RuntimeLibrary::SetValue<FUniversalCommunicationMessage>(InputTag, InputMessage);
 
 }
@@ -124,10 +129,11 @@ void UCC_InputComponent::InputDataAsset(UCC_TaggedInputActionsDataAsset* DataAss
 	if (!PlayerController || !PlayerController->InputComponent)
 		return;
 
+	// Bind actions when input data asset actives
 	BindAction(PlayerController);
 }
 
-APlayerController* UCC_InputComponent::GetPlayerController()
+APlayerController* UCC_InputComponent::GetPlayerController() const
 {
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetOwner())) {
 
@@ -137,7 +143,7 @@ APlayerController* UCC_InputComponent::GetPlayerController()
 	return nullptr;
 }
 
-ACharacter* UCC_InputComponent::GetCharacter()
+ACharacter* UCC_InputComponent::GetCharacter() const
 {
 	APlayerController* PlayerController = GetPlayerController();
 	if (!PlayerController)
@@ -163,12 +169,14 @@ void UCC_InputComponent::BroadcastCentralMessage(FGameplayTag& Channel)
 
 void UCC_InputComponent::RegisterCentralMessageListener(FGameplayTag Channel)
 {
+	// Cache listener object
 	auto* Listener = UCC_CentralCommunicationSubsystem::RegisterListener(this, this, Channel);
 	if (!Listener) {
 		UE_LOG(LogActor, Log, TEXT("Central Message Delegate is not valid..."));
 		return;
 	}
 
+	// Subscribe a listening event to central communication messages(testing purpose)
 	Listener->CentralMessageDelegate.AddUniqueDynamic(this, &UCC_InputComponent::OnCentralMessageReceived);
 }
 

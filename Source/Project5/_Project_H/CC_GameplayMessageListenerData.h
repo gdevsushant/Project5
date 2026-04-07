@@ -1,3 +1,10 @@
+/*
+	Central message listener data structure
+
+	Contains the listener object
+	Contains the handle id of the listener
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -11,5 +18,5 @@ struct FMessageData
 public:
 
 	TWeakObjectPtr<UObject> ListenerObject;
-	int32 HandleId;
+	int32 HandleId = 0;
 };

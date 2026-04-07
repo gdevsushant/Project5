@@ -1,3 +1,10 @@
+/*
+	Movement Component for a player character
+	
+	Executes provided movement strategy
+	Provides a public interface for executing movement strategy
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -22,7 +29,9 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
+	// Executes provided movement strategy
 	void Move(UCC_BaseMovementStrategy* MovementStrategy);
 
+	// Bridge btw strategy move() and public blueprint/c++ calling move()
 	virtual void Move_Implementation(UCC_BaseMovementStrategy* MovementStrategy) override;
 };

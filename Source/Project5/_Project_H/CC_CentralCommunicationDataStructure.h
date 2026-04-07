@@ -1,3 +1,12 @@
+/*
+	Central communication data structure
+
+	Base message payload for communication message
+	 -Sender
+	 -Tag/Channel
+	 -Payload(InputActionValue)
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"

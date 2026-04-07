@@ -9,14 +9,14 @@
 
 void UK2Node_GetDynamicValue::AllocateDefaultPins()
 {
-	CreatePin(EEdGraphPinDirection::EGPD_Input, UEdGraphSchema_K2::PC_Exec, UEdGraphSchema_K2::PN_Execute);
-	CreatePin(EEdGraphPinDirection::EGPD_Output, UEdGraphSchema_K2::PC_Exec, UEdGraphSchema_K2::PN_Then);
-	UEdGraphPin* KeyInPin = CreatePin(EEdGraphPinDirection::EGPD_Input, UEdGraphSchema_K2::PC_Struct, FName("Tag"));
-	KeyInPin->PinType.PinSubCategoryObject = TBaseStructure<FGameplayTag>::Get();
-	KeyInPin->PinFriendlyName = FText::FromString(TEXT("Tag"));
-	UEdGraphPin* OutPin = CreatePin(EEdGraphPinDirection::EGPD_Output, UEdGraphSchema_K2::PC_Wildcard, FName("Out"));
-	OutPin->PinFriendlyName = FText::FromString("OutValue");
-	Super::AllocateDefaultPins();
+	CreatePin(EEdGraphPinDirection::EGPD_Input, UEdGraphSchema_K2::PC_Exec, UEdGraphSchema_K2::PN_Execute); // input execution pin
+	CreatePin(EEdGraphPinDirection::EGPD_Output, UEdGraphSchema_K2::PC_Exec, UEdGraphSchema_K2::PN_Then); // output execution pin
+	UEdGraphPin* KeyInPin = CreatePin(EEdGraphPinDirection::EGPD_Input, UEdGraphSchema_K2::PC_Struct, FName("Tag")); // input pin for channel(tag)
+	KeyInPin->PinType.PinSubCategoryObject = TBaseStructure<FGameplayTag>::Get(); // Set the struct type of the pin to FGameplayTag
+	KeyInPin->PinFriendlyName = FText::FromString(TEXT("Tag")); // Set the display name of the input pin
+	UEdGraphPin* OutPin = CreatePin(EEdGraphPinDirection::EGPD_Output, UEdGraphSchema_K2::PC_Wildcard, FName("Out")); // output pin for the value(default wildcard)
+	OutPin->PinFriendlyName = FText::FromString("OutValue"); // Set the display name of output pin
+	Super::AllocateDefaultPins(); // Call parent function in case it does something important (not strictly necessary in this case since the parent function doesn't do anything, but good practice)
 }
 
 FText UK2Node_GetDynamicValue::GetNodeTitle(ENodeTitleType::Type TitleType) const { return FText::FromString(TEXT("Get Storage")); }
@@ -26,31 +26,36 @@ FLinearColor UK2Node_GetDynamicValue::GetNodeTitleColor() const { return FLinear
 
 void UK2Node_GetDynamicValue::GetMenuActions(FBlueprintActionDatabaseRegistrar& Registrar) const
 {
-	UClass* ActionKey = GetClass();
-	if (Registrar.IsOpenForRegistration(ActionKey))
+	UClass* ActionKey = GetClass(); // Get class of this node to use as a key for registration
+	if (Registrar.IsOpenForRegistration(ActionKey)) // Check if the registrar is open for registration for this class (prevents registering multiple times)
 	{
-		UBlueprintNodeSpawner* Spawner = UBlueprintNodeSpawner::Create(GetClass());
-		Registrar.AddBlueprintAction(ActionKey, Spawner);
+		UBlueprintNodeSpawner* Spawner = UBlueprintNodeSpawner::Create(GetClass()); // Create a spawner to spawn a node of this class when action is selected in the right click menu
+		Registrar.AddBlueprintAction(ActionKey, Spawner); // Spawn the node when the action is selected in right click menu
 	}
 }
 
 void UK2Node_GetDynamicValue::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
-	Super::ExpandNode(CompilerContext, SourceGraph);
+	Super::ExpandNode(CompilerContext, SourceGraph); // Call parent function in case it does something important (not strictly necessary in this case since the parent function doesn't do anything, but good practice)
 
-	for (UEdGraphPin* Pin : Pins)
+	for (UEdGraphPin* Pin : Pins) // Loop through pins and set any wildcard pins to the default type of the node (float in this case) to prevent issues with pin connections during compilation. 
+		// This also allows the node to be used without needing to set a type for the output pin, since it will just default to float.
 	{
-		if (Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Real && Pin->PinType.PinSubCategory == NAME_None) Pin->PinType.PinSubCategory = UEdGraphSchema_K2::PC_Float;
+		if (Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Real && Pin->PinType.PinSubCategory == NAME_None) Pin->PinType.PinSubCategory = UEdGraphSchema_K2::PC_Float; // Set any wildcard real pins to float by default
 	}
 
-	UEdGraphPin* TagPin = FindPin(FName("Tag"), EEdGraphPinDirection::EGPD_Input);
-	UEdGraphPin* OutPin = FindPin(FName("Out"), EEdGraphPinDirection::EGPD_Output);
+	UEdGraphPin* TagPin = FindPin(FName("Tag"), EEdGraphPinDirection::EGPD_Input); // Find the input pin for the tag
+	UEdGraphPin* OutPin = FindPin(FName("Out"), EEdGraphPinDirection::EGPD_Output); // Find the output pin for the value
 
-	if (!TagPin || !OutPin) { CompilerContext.MessageLog.Error(TEXT("Node @@ missing pins."), this); BreakAllNodeLinks(); return; }
-	if (OutPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Wildcard) { CompilerContext.MessageLog.Warning(TEXT("Node @@ Out pin has no type set."), this); BreakAllNodeLinks(); return; }
-	if (TagPin->LinkedTo.Num() <= 0 && TagPin->DefaultValue.IsEmpty()) { CompilerContext.MessageLog.Warning(TEXT("Node @@ Tag pin must be connected or have a value."), this); BreakAllNodeLinks(); return; }
+	if (!TagPin || !OutPin) { CompilerContext.MessageLog.Error(TEXT("Node @@ missing pins."), this); BreakAllNodeLinks(); return; } // Validates the pins and show error in blueprints
+	if (OutPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Wildcard) { CompilerContext.MessageLog.Warning(TEXT("Node @@ Out pin has no type set."), this); BreakAllNodeLinks(); return; } // Validates the pins and show warning if output pin is still wildcard (not set to a specific type)
+	if (TagPin->LinkedTo.Num() <= 0 && TagPin->DefaultValue.IsEmpty()) { CompilerContext.MessageLog.Warning(TEXT("Node @@ Tag pin must be connected or have a value."), this); BreakAllNodeLinks(); return; } // Validates the pins and show warning if tag pin is not connected and has no default value
 
-	UK2Node_CallFunction* GetValueNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
+	// Spawn a call function node to call the GetDynamicValue() in runtimelibrary, which will do the actual work of retrieving the value from global storage
+	// Included in shipping build
+	UK2Node_CallFunction* GetValueNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph); 
+
+	// Set the function to call to GetDynamicValue from runtimelibrary and allocate pins for the function call node
 	GetValueNode->FunctionReference.SetExternalMember(GET_FUNCTION_NAME_CHECKED(UProject5RuntimeLibrary, GetDynamicValue), UProject5RuntimeLibrary::StaticClass());
 	GetValueNode->AllocateDefaultPins();
 
@@ -69,6 +74,7 @@ void UK2Node_GetDynamicValue::ExpandNode(FKismetCompilerContext& CompilerContext
 
 	FuncOutPin->PinType = SavedType;
 
+	// Move the connections from blueprint nodes to function call node
 	CompilerContext.MovePinLinksToIntermediate(*GetExecPin(), *FuncExecPin);
 	CompilerContext.MovePinLinksToIntermediate(*GetThenPin(), *FuncThenPin);
 	CompilerContext.MovePinLinksToIntermediate(*OutPin, *FuncOutPin);
@@ -86,9 +92,13 @@ void UK2Node_GetDynamicValue::GetNodeContextMenuActions(UToolMenu* Menu, UGraphN
 	if (!Context || !Context->Pin) return;
 	if (Context->Pin->PinName != FName("Out")) return;
 
+	// Add a section to context menu to change the type of the output pin
 	FToolMenuSection& Section = Menu->AddSection(FName("ChangePinType"), FText::FromString(TEXT("Change Pin Type")));
+
+	// Use lambda functions to change the pin type when a menu entry is selected. Need to use a mutable lambda and const_cast to modify the node from within the lambda since this function is const.
 	UK2Node_GetDynamicValue* MutableThis = const_cast<UK2Node_GetDynamicValue*>(this);
 
+	// Options for different pin types
 	Section.AddMenuEntry(FName("None"), FText::FromString(TEXT("None")), FText::FromString(TEXT("Reset pin to wildcard")), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeOutputPinType(UEdGraphSchema_K2::PC_Wildcard, NAME_None, nullptr); })));
 	Section.AddMenuEntry(FName("Boolean"), FText::FromString(TEXT("Boolean")), FText::FromString(TEXT("Set pin to Boolean")), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeOutputPinType(UEdGraphSchema_K2::PC_Boolean, NAME_None, nullptr); })));
 	Section.AddMenuEntry(FName("Integer"), FText::FromString(TEXT("Integer")), FText::FromString(TEXT("Set pin to Integer")), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeOutputPinType(UEdGraphSchema_K2::PC_Int, NAME_None, nullptr); })));
@@ -117,11 +127,14 @@ void UK2Node_GetDynamicValue::ChangeOutputPinType(FName NewCategory, FName NewSu
 	OutPin->PinType.PinSubCategory = NewSubCategory;
 	OutPin->PinType.PinSubCategoryObject = NewTypeObject;
 	OutPin->BreakAllPinLinks();
-	GetGraph()->NotifyGraphChanged();
+	GetGraph()->NotifyGraphChanged(); // Notify the graph that the node has changed so that it can update the connections and show the new pin type
 
+	// Find the blueprint that this node belongs to so that we can mark it as modified to ensure the changes are saved.
+	// This is necessary because changing the pin type and breaking links does not automatically mark the blueprint as modified, 
+	// which can lead to changes not being saved if the user forgets to manually save after changing the pin type.
 	UBlueprint* Blueprint = FBlueprintEditorUtils::FindBlueprintForNode(this);
 	if (!Blueprint) return;
-	FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint);
+	FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint); // Mark the blueprint as modified to ensure changes are saved
 }
 
 void UK2Node_GetDynamicValue::NotifyPinConnectionListChanged(UEdGraphPin* Pin)
@@ -131,6 +144,7 @@ void UK2Node_GetDynamicValue::NotifyPinConnectionListChanged(UEdGraphPin* Pin)
 	if (!OutPin) return;
 	if (Pin != OutPin) return;
 
+	// Update the output pin type based on connected input pin type
 	if (OutPin->LinkedTo.Num() > 0)
 	{
 		UEdGraphPin* ConnectedPin = OutPin->LinkedTo[0];

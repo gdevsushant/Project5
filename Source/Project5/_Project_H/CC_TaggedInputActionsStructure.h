@@ -1,3 +1,10 @@
+/*
+	Base structure for tagged input actions.
+	 -Input Tag/Channel
+	 -Input Action
+	 -Input Trigger Event
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"

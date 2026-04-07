@@ -1,3 +1,8 @@
+/*
+	Stores a list of listeners for gameplay messages
+	Stores a default delegate to broadcast messages to all active listeners
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"

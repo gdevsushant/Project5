@@ -1,3 +1,11 @@
+/*
+	Base Character class(Custom)
+	Acts as the core template providing share data and common logic for all derived character types.
+	Acts as an extensible placeholder to ensure long-term architectural stability with small logics and datas.
+	Can be used for future logics
+	Auto-instantiates a default movement component
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -10,6 +18,7 @@
 #include "CC_BaseCharacter.generated.h"
 
 class UCC_CentralMessageValueDataAsset;
+class UCC_MovementComponent;
 
 UCLASS()
 class PROJECT5_API ACC_BaseCharacter : public ACharacter, public ICC_CentralCommunicationInterface
@@ -26,4 +35,8 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement Component")
+	UCC_MovementComponent* MovementComponent;
 };

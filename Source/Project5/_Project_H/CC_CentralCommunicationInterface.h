@@ -14,5 +14,4 @@ class PROJECT5_API ICC_CentralCommunicationInterface
 {
 	GENERATED_BODY()
 
-
 };
