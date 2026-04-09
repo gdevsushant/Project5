@@ -1,11 +1,11 @@
 #include "K2Node_GetDynamicValue.h"
 #include "NativeGameplayTags.h"
-#include "Project5RuntimeLibrary.h"
+#include "DynamicStorageRuntimeLibrary.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintNodeSpawner.h"
 #include "KismetCompiler.h"
 #include "K2Node_CallFunction.h"
-#include "ProjectSetting.h"
+#include "DynamicStorageProjectSetting.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
 void UK2Node_GetDynamicValue::AllocateDefaultPins()
@@ -57,7 +57,7 @@ void UK2Node_GetDynamicValue::ExpandNode(FKismetCompilerContext& CompilerContext
 	UK2Node_CallFunction* GetValueNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph); 
 
 	// Set the function to call to GetDynamicValue from runtimelibrary and allocate pins for the function call node
-	GetValueNode->FunctionReference.SetExternalMember(GET_FUNCTION_NAME_CHECKED(UProject5RuntimeLibrary, GetDynamicValue), UProject5RuntimeLibrary::StaticClass());
+	GetValueNode->FunctionReference.SetExternalMember(GET_FUNCTION_NAME_CHECKED(UDynamicStorageRuntimeLibrary, GetDynamicValue), UDynamicStorageRuntimeLibrary::StaticClass());
 	GetValueNode->AllocateDefaultPins();
 
 	UEdGraphPin* FuncExecPin = GetValueNode->GetExecPin();
@@ -319,7 +319,7 @@ void UK2Node_GetDynamicValue::PinDefaultValueChanged(UEdGraphPin* Pin)
 
 FStorageDefinition* UK2Node_GetDynamicValue::GetSettingStorageData(FGameplayTag Tag)
 {
-	UProjectSetting* Setting = GetMutableDefault<UProjectSetting>();
+	UDynamicStorageProjectSetting* Setting = GetMutableDefault<UDynamicStorageProjectSetting>();
 
 	if (!Setting) { UE_LOG(LogTemp, Log, TEXT("Setting is invalid in getstorage node in GetSettingStorageData()")); return nullptr; }
 	if (!Tag.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Tag is invalid in getstorage node in GetSettingStorageData()")); return nullptr; }

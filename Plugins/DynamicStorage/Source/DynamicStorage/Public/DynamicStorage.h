@@ -3,9 +3,8 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FProject5EditorModule : public IModuleInterface
+class FDynamicStorageModule : public IModuleInterface
 {
-
 public:
     virtual void StartupModule() override;
     virtual void ShutdownModule() override;

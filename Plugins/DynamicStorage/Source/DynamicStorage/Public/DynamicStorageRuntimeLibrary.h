@@ -7,7 +7,7 @@
 #include "UObject/StructOnScope.h"
 #include "Templates/Models.h"
 #include "NativeGameplayTags.h"  
-#include "Project5RuntimeLibrary.generated.h"
+#include "DynamicStorageRuntimeLibrary.generated.h"
 
 struct FDynamicValue;
 
@@ -20,7 +20,7 @@ struct TIsUnrealStruct {
 };
 
 UCLASS()
-class PROJECT5_API UProject5RuntimeLibrary : public UBlueprintFunctionLibrary
+class DYNAMICSTORAGE_API UDynamicStorageRuntimeLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

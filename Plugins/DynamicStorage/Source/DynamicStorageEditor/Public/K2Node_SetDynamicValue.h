@@ -5,10 +5,10 @@
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "K2Node_SetDynamicValue.generated.h"
 
-class UProjectSetting;
+class UDynamicStorageProjectSetting;
 
 UCLASS()
-class PROJECT5EDITOR_API UK2Node_SetDynamicValue : public UK2Node
+class DYNAMICSTORAGEEDITOR_API UK2Node_SetDynamicValue : public UK2Node
 {
 	GENERATED_BODY()
 
@@ -26,7 +26,7 @@ public:
 	virtual void PostReconstructNode() override; // Func for handling node reconstruction
 	virtual bool IsConnectionDisallowed(const UEdGraphPin* MyPin, const UEdGraphPin* OtherPin, FString& OutReason) const override; // Func for validating pin connections
 	
-	UProjectSetting* GetProjectSetting();
+	UDynamicStorageProjectSetting* GetProjectSetting();
 	void SetSettingStorage(FGameplayTag Tag, FName Category, FName SubCategory, UObject* SubCategoryObj);
 
 private:

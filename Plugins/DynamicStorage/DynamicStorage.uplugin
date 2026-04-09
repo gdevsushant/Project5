@@ -1,0 +1,35 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Dynamic Storage System",
+	"Description": "A highly modular wildcard storage and retrieval system for any type of data.",
+	"Category": "Programming",
+	"CreatedBy": "Sushant",
+	"CreatedByURL": "gdevsushant.onrender.com",
+	"DocsURL": "https://github.com/gdevsushant/Design-Architectures/blob/main/PluginDoc.drawio.pdf",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "DynamicStorage",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "DynamicStorageEditor",
+			"Type": "UncookedOnly",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "GameplayTagsEditor",
+			"Enabled": true
+		}
+	]
+}

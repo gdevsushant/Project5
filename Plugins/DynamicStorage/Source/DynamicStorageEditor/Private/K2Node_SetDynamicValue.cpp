@@ -1,5 +1,5 @@
 #include "K2Node_SetDynamicValue.h"
-#include "Project5RuntimeLibrary.h"
+#include "DynamicStorageRuntimeLibrary.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintNodeSpawner.h"
 #include "KismetCompiler.h"
@@ -9,7 +9,7 @@
 #include "Engine/UserDefinedEnum.h"
 #include "Engine/UserDefinedStruct.h"
 #include "Kismet2/BlueprintEditorUtils.h"
-#include "ProjectSetting.h"
+#include "DynamicStorageProjectSetting.h"
 
 void UK2Node_SetDynamicValue::AllocateDefaultPins()
 {
@@ -61,7 +61,7 @@ void UK2Node_SetDynamicValue::ExpandNode(FKismetCompilerContext& CompilerContext
 	UK2Node_CallFunction* SetValueNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
 	
 	// Set the function to call to SetDynamicValue from runtimelibrary and allocate pins for the function call node
-	SetValueNode->FunctionReference.SetExternalMember(GET_FUNCTION_NAME_CHECKED(UProject5RuntimeLibrary, SetDynamicValue), UProject5RuntimeLibrary::StaticClass());
+	SetValueNode->FunctionReference.SetExternalMember(GET_FUNCTION_NAME_CHECKED(UDynamicStorageRuntimeLibrary, SetDynamicValue), UDynamicStorageRuntimeLibrary::StaticClass());
 	SetValueNode->AllocateDefaultPins();
 
 	UEdGraphPin* FuncExecPin = SetValueNode->GetExecPin();
@@ -288,9 +288,9 @@ void UK2Node_SetDynamicValue::NotifyPinConnectionListChanged(UEdGraphPin* Pin)
 	GetGraph()->NotifyGraphChanged();
 }
 
-UProjectSetting* UK2Node_SetDynamicValue::GetProjectSetting()
+UDynamicStorageProjectSetting* UK2Node_SetDynamicValue::GetProjectSetting()
 {
-	UProjectSetting* Setting = GetMutableDefault<UProjectSetting>();
+	UDynamicStorageProjectSetting* Setting = GetMutableDefault<UDynamicStorageProjectSetting>();
 	if (Setting) {
 
 		return Setting;
@@ -306,7 +306,7 @@ void UK2Node_SetDynamicValue::SetSettingStorage(FGameplayTag Tag, FName Category
 	if (!SubCategory.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid subcategory")); return; }
 	if (!SubCategoryObj) { UE_LOG(LogTemp, Log, TEXT("Invalid Object")); return; }
 
-	UProjectSetting* Setting = GetProjectSetting();
+	UDynamicStorageProjectSetting* Setting = GetProjectSetting();
 	if (!Setting) { UE_LOG(LogTemp, Log, TEXT("Invalid Setting")); return; }
 
 	FStorageDefinition* Def = Setting->StorageRegistry.Find(Tag);

@@ -10,8 +10,8 @@
 #include "_Project_H/CC_CentralCommunicationDataStructure.h"
 #include "_Project_H/CC_CentralCommunicationInterface.h"
 #include "_Project_H/CC_CentralCommunicationSubsystem.h"
-#include "Project5RuntimeLibrary.h"
-#include "Project5EditorDynamicDataStructure.h"
+#include "DynamicStorageRuntimeLibrary.h"
+#include "DynamicStorageEditorDynamicDataStructure.h"
 #include "NativeGameplayTags.h"
 
 UCC_InputComponent::UCC_InputComponent()
@@ -95,7 +95,7 @@ void UCC_InputComponent::OnInputRecievedMethod(const FInputActionValue& Value, F
 		}
 
 		// Cache input value to global storage
-		UProject5RuntimeLibrary::SetValue<FUniversalCommunicationMessage>(InputTag, InputMessage);
+		UDynamicStorageRuntimeLibrary::SetValue<FUniversalCommunicationMessage>(InputTag, InputMessage);
 
 		// Dispatches input events to all active listeners
 		UCC_InputComponent::BroadcastCentralMessage(InputTag);
@@ -114,7 +114,7 @@ void UCC_InputComponent::OnInputCompletedMethod(const FInputActionValue& Value, 
 	InputMessage.InputValue = FInputActionValue(); // Reset the input value
 
 	// Cache input value to global storage when input is finished
-	UProject5RuntimeLibrary::SetValue<FUniversalCommunicationMessage>(InputTag, InputMessage);
+	UDynamicStorageRuntimeLibrary::SetValue<FUniversalCommunicationMessage>(InputTag, InputMessage);
 
 }
 

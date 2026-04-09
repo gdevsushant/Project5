@@ -2,9 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
-#include "EdGraph/EdGraphPin.h"
 #include "NativeGameplayTags.h"
-#include "ProjectSetting.generated.h"
+#include "DynamicStorageProjectSetting.generated.h"
 
 USTRUCT()
 struct FStorageDefinition
@@ -23,13 +22,13 @@ struct FStorageDefinition
 };
 
 UCLASS(Config = Game, DefaultConfig, meta = (DisplayName = "Project 5 Storage Settings"))
-class PROJECT5_API UProjectSetting : public UDeveloperSettings
+class DYNAMICSTORAGE_API UDynamicStorageProjectSetting : public UDeveloperSettings
 {
 	GENERATED_BODY()
 
 public:
 
-	UProjectSetting();
+	UDynamicStorageProjectSetting();
 
 	UPROPERTY(Config, EditAnywhere, Category = "Storage", meta = (ForceExpandCategories))
 	TMap<FGameplayTag, FStorageDefinition> StorageRegistry;

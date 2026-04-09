@@ -1,5 +1,5 @@
 /*
-	Project5 Editor Runtime Library
+	DynamicStorage Editor Runtime Library
 	
 	Provides static helper functions, data for global storage, checker functions
 	
@@ -9,7 +9,7 @@
 
 #include "CoreMinimal.h"
 #include "NativeGameplayTags.h"
-#include "Project5EditorDynamicDataStructure.generated.h"
+#include "DynamicStorageEditorDynamicDataStructure.generated.h"
 
 UENUM(BlueprintType)
 enum class EDynamicDataCategory : uint8 // Category(enum) of input data

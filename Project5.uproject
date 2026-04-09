@@ -12,13 +12,7 @@
 				"Engine",
 				"CoreUObject"
 			]
-		},
-
-		{
-            		"Name": "Project5Editor",
-            		"Type": "UncookedOnly",
-            		"LoadingPhase": "PostEngineInit"
-        	}
+		}
 	],
 	"Plugins": [
 		{
@@ -46,6 +40,10 @@
 		},
 		{
 			"Name": "MotionTrajectory",
+			"Enabled": true
+		},
+		{
+			"Name": "DynamicStorage",
 			"Enabled": true
 		}
 	]

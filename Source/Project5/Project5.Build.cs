@@ -8,7 +8,7 @@ public class Project5 : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "GameplayTags", "DeveloperSettings" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "GameplayTags", "DeveloperSettings", "DynamicStorage" });
 		PublicIncludePaths.Add(ModuleDirectory); 
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

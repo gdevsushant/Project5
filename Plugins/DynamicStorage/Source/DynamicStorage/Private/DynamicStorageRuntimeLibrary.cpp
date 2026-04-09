@@ -1,17 +1,17 @@
-#include "Project5RuntimeLibrary.h"
-#include "Project5EditorDynamicDataStructure.h"
+#include "DynamicStorageRuntimeLibrary.h"
+#include "DynamicStorageEditorDynamicDataStructure.h"
 #include "NativeGameplayTags.h"
 
-TMap<FGameplayTag, FDynamicValue> UProject5RuntimeLibrary::Storage; // Define global storage for dynamic values
+TMap<FGameplayTag, FDynamicValue> UDynamicStorageRuntimeLibrary::Storage; // Define global storage for dynamic values
 
 // Fake c++ hook, never called, just to satisfy the compiler
-void UProject5RuntimeLibrary::SetDynamicValue(const FGameplayTag Tag, const int32& InValue) { checkNoEntry(); }
-void UProject5RuntimeLibrary::GetDynamicValue(const FGameplayTag Tag, int32& OutValue) { checkNoEntry(); }
+void UDynamicStorageRuntimeLibrary::SetDynamicValue(const FGameplayTag Tag, const int32& InValue) { checkNoEntry(); }
+void UDynamicStorageRuntimeLibrary::GetDynamicValue(const FGameplayTag Tag, int32& OutValue) { checkNoEntry(); }
 
 // C++ hook, copy blueprint node input pin datatype & value to output pin, never called directly, just to satisfy the compiler
-void UProject5RuntimeLibrary::PassThroughValue(const int32& InValue, int32& OutValue) { OutValue = InValue; }
+void UDynamicStorageRuntimeLibrary::PassThroughValue(const int32& InValue, int32& OutValue) { OutValue = InValue; }
 
-void UProject5RuntimeLibrary::Internal_SetGenericValue(const FGameplayTag Tag, FProperty* InProp, const void* ValuePtr)
+void UDynamicStorageRuntimeLibrary::Internal_SetGenericValue(const FGameplayTag Tag, FProperty* InProp, const void* ValuePtr)
 {
 	if (!InProp || !ValuePtr || !Tag.IsValid()) return;
 
@@ -44,7 +44,7 @@ void UProject5RuntimeLibrary::Internal_SetGenericValue(const FGameplayTag Tag, F
 	GetStorage().Add(Tag, MoveTemp(NewVar)); // Cache new data in global storage
 }
 
-void UProject5RuntimeLibrary::Internal_GetGenericValue(const FGameplayTag Tag, FProperty* OutProp, void* OutValuePtr)
+void UDynamicStorageRuntimeLibrary::Internal_GetGenericValue(const FGameplayTag Tag, FProperty* OutProp, void* OutValuePtr)
 {
 	if (!OutProp || !OutValuePtr || !Tag.IsValid()) return;
 	FDynamicValue* Found = GetStorage().Find(Tag);
@@ -80,7 +80,7 @@ void UProject5RuntimeLibrary::Internal_GetGenericValue(const FGameplayTag Tag, F
 	}
 }
 
-void UProject5RuntimeLibrary::Internal_SetGenericValue(const FGameplayTag Tag, UScriptStruct* Struct, const void* ValuePtr)
+void UDynamicStorageRuntimeLibrary::Internal_SetGenericValue(const FGameplayTag Tag, UScriptStruct* Struct, const void* ValuePtr)
 {
 	if (!Struct || !ValuePtr || !Tag.IsValid()) return;
 	FDynamicValue NewVar;
@@ -94,7 +94,7 @@ void UProject5RuntimeLibrary::Internal_SetGenericValue(const FGameplayTag Tag, U
 	GetStorage().Add(Tag, MoveTemp(NewVar)); // Cache new data in global storage
 }
 
-void UProject5RuntimeLibrary::Internal_GetGenericValue(const FGameplayTag Tag, UScriptStruct* Struct, void* OutValuePtr)
+void UDynamicStorageRuntimeLibrary::Internal_GetGenericValue(const FGameplayTag Tag, UScriptStruct* Struct, void* OutValuePtr)
 {
 	FDynamicValue* Found = GetStorage().Find(Tag);
 	if (Found && Found->Category == EDynamicDataCategory::Struct && Found->StructValue == Struct)
@@ -103,7 +103,7 @@ void UProject5RuntimeLibrary::Internal_GetGenericValue(const FGameplayTag Tag, U
 	}
 }
 
-void UProject5RuntimeLibrary::Internal_SetPrimitiveValue(const FGameplayTag Tag, const void* ValuePtr, int32 Size, FName TypeName)
+void UDynamicStorageRuntimeLibrary::Internal_SetPrimitiveValue(const FGameplayTag Tag, const void* ValuePtr, int32 Size, FName TypeName)
 {
 	if (!Tag.IsValid()) return;
 	FDynamicValue NewVar;
@@ -116,7 +116,7 @@ void UProject5RuntimeLibrary::Internal_SetPrimitiveValue(const FGameplayTag Tag,
 	GetStorage().Add(Tag, MoveTemp(NewVar)); // Cache new data in global storage
 }
 
-void UProject5RuntimeLibrary::Internal_GetPrimitiveValue(const FGameplayTag Tag, void* OutValuePtr, int32 Size)
+void UDynamicStorageRuntimeLibrary::Internal_GetPrimitiveValue(const FGameplayTag Tag, void* OutValuePtr, int32 Size)
 {
 	if (FDynamicValue* Found = GetStorage().Find(Tag))
 	{
@@ -127,7 +127,7 @@ void UProject5RuntimeLibrary::Internal_GetPrimitiveValue(const FGameplayTag Tag,
 	}
 }
 
-DEFINE_FUNCTION(UProject5RuntimeLibrary::execSetDynamicValue)
+DEFINE_FUNCTION(UDynamicStorageRuntimeLibrary::execSetDynamicValue)
 {
 	P_GET_STRUCT(FGameplayTag, Tag); // Retrieve the gameplay tag parameter from the stack
 	Stack.StepCompiledIn<FProperty>(nullptr); // Retrieve the property from stack(didn't copied yet anywhere)
@@ -139,7 +139,7 @@ DEFINE_FUNCTION(UProject5RuntimeLibrary::execSetDynamicValue)
 	P_NATIVE_END; // End wrapper macro
 }
 
-DEFINE_FUNCTION(UProject5RuntimeLibrary::execGetDynamicValue)
+DEFINE_FUNCTION(UDynamicStorageRuntimeLibrary::execGetDynamicValue)
 {
 	P_GET_STRUCT(FGameplayTag, Tag); // Retrieve the gameplay tag parameter from the stack
 	Stack.StepCompiledIn<FProperty>(nullptr); // Retrieve the property from stack(didn't copied yet anywhere)
@@ -151,7 +151,7 @@ DEFINE_FUNCTION(UProject5RuntimeLibrary::execGetDynamicValue)
 	P_NATIVE_END; // End wrapper macro
 }
 
-DEFINE_FUNCTION(UProject5RuntimeLibrary::execPassThroughValue)
+DEFINE_FUNCTION(UDynamicStorageRuntimeLibrary::execPassThroughValue)
 {
 	Stack.StepCompiledIn<FProperty>(nullptr); // Retrieve the input property from stack(didn't copied yet anywhere)
 	FProperty* InProp = Stack.MostRecentProperty; // Get the input property for validation and processing
@@ -166,12 +166,12 @@ DEFINE_FUNCTION(UProject5RuntimeLibrary::execPassThroughValue)
 	}
 }
 
-TMap<FGameplayTag, FDynamicValue>& UProject5RuntimeLibrary::GetStorage() // Shared actual storage object
+TMap<FGameplayTag, FDynamicValue>& UDynamicStorageRuntimeLibrary::GetStorage() // Shared actual storage object
 {
 	return Storage;
 }
 
-void UProject5RuntimeLibrary::RemoveDynamicValue(const FGameplayTag Tag)
+void UDynamicStorageRuntimeLibrary::RemoveDynamicValue(const FGameplayTag Tag)
 {
 	if (FDynamicValue* Found = GetStorage().Find(Tag))
 	{
@@ -180,13 +180,13 @@ void UProject5RuntimeLibrary::RemoveDynamicValue(const FGameplayTag Tag)
 	}
 }
 
-void UProject5RuntimeLibrary::ClearAllDynamicValues()
+void UDynamicStorageRuntimeLibrary::ClearAllDynamicValues()
 {
 	for (auto& Pair : GetStorage()) Pair.Value.Clear();
 	GetStorage().Empty();
 }
 
-bool UProject5RuntimeLibrary::HasDynamicValue(const FGameplayTag Tag)
+bool UDynamicStorageRuntimeLibrary::HasDynamicValue(const FGameplayTag Tag)
 {
 	return Tag.IsValid() && GetStorage().Contains(Tag);
 }

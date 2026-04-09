@@ -8,7 +8,7 @@
 struct FStorageDefinition;
 
 UCLASS()
-class PROJECT5EDITOR_API UK2Node_GetDynamicValue : public UK2Node
+class DYNAMICSTORAGEEDITOR_API UK2Node_GetDynamicValue : public UK2Node
 {
 	GENERATED_BODY()
 
