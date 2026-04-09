@@ -9,6 +9,7 @@
 #include "Engine/UserDefinedEnum.h"
 #include "Engine/UserDefinedStruct.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "ProjectSetting.h"
 
 void UK2Node_SetDynamicValue::AllocateDefaultPins()
 {
@@ -84,6 +85,12 @@ void UK2Node_SetDynamicValue::ExpandNode(FKismetCompilerContext& CompilerContext
 	CompilerContext.MovePinLinksToIntermediate(*TagPin, *FuncTagPin);
 	FuncInPin->PinType = SavedType;
 
+	// Refresh pin type on compile
+	FGameplayTag Tag;
+	FGameplayTag::StaticStruct()->ImportText(*TagPin->GetDefaultAsString(), &Tag, nullptr, EPropertyPortFlags::PPF_None, GError, FGameplayTag::StaticStruct()->GetName());
+	if (!Tag.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid Tag to set")); BreakAllNodeLinks(); return; }
+	SetSettingStorage(Tag, SelectedCategory, SelectedSubCategory, SelectedObject);
+
 	BreakAllNodeLinks();
 }
 
@@ -108,11 +115,76 @@ void UK2Node_SetDynamicValue::GetNodeContextMenuActions(UToolMenu* Menu, UGraphN
 	Section.AddMenuEntry(FName("Float"), FText::FromString(TEXT("Float")), FText::FromString(TEXT("Set pin to Float")), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Real, UEdGraphSchema_K2::PC_Float, nullptr); })));
 	Section.AddMenuEntry(FName("Double"), FText::FromString(TEXT("Double")), FText::FromString(TEXT("Set pin to Double")), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Real, UEdGraphSchema_K2::PC_Double, nullptr); })));
 	Section.AddMenuEntry(FName("Name"), FText::FromString(TEXT("Name")), FText::FromString(TEXT("Set pin to Name")), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Name, NAME_None, nullptr); })));
-	Section.AddMenuEntry(FName("Struct"), FText::FromString(TEXT("Structure")), FText::FromString(TEXT("Structure")), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Struct, NAME_None, nullptr); })));
-	Section.AddMenuEntry(FName("Enum"), FText::FromString(TEXT("Enum")), FText::FromString(TEXT("Enum")), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Byte, NAME_None, nullptr); })));
-	Section.AddMenuEntry(FName("String"), FText::FromString(TEXT("String")), FText::GetEmpty(), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_String, NAME_None, nullptr); })));
-	Section.AddMenuEntry(FName("Object"), FText::FromString(TEXT("Object")), FText::GetEmpty(), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Object, FName("object"), UObject::StaticClass()); })));
-	Section.AddMenuEntry(FName("Class"), FText::FromString(TEXT("Class")), FText::GetEmpty(), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Class, FName("object"), UObject::StaticClass()); })));
+	Section.AddMenuEntry(FName("String"), FText::FromString(TEXT("String")), FText::FromString(TEXT("Set pin to String")), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([MutableThis]() { MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_String, NAME_None, nullptr); })));
+	Section.AddMenuEntry(
+		FName("FVector"),
+		FText::FromString(TEXT("FVector")),
+		FText::FromString(TEXT("Set pin to FVector")),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateLambda([MutableThis]() {
+			// Retrieve the actual struct object for FVector
+			UScriptStruct* VectorStruct = TBaseStructure<FVector>::Get();
+
+			// Pass the struct object so the pin knows what it is
+			MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Struct, NAME_None, VectorStruct);
+			}))
+	);
+
+	Section.AddMenuEntry(
+		FName("FRotator"),
+		FText::FromString(TEXT("FRotator")),
+		FText::FromString(TEXT("Set pin to FRotator")),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateLambda([MutableThis]() {
+			// Retrieve the actual struct object for FRotator
+			UScriptStruct* RotatorStruct = TBaseStructure<FRotator>::Get();
+
+			// Pass the struct object so the pin knows it has Pitch, Yaw, and Roll
+			MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Struct, NAME_None, RotatorStruct);
+			}))
+	);
+
+	Section.AddMenuEntry(
+		FName("FVector2D"),
+		FText::FromString(TEXT("Vector 2D")),
+		FText::FromString(TEXT("Set pin to FVector2D")),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateLambda([MutableThis]() {
+			// Retrieve the UScriptStruct for FVector2D
+			UScriptStruct* Vector2DStruct = TBaseStructure<FVector2D>::Get();
+
+			// Apply the change
+			MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Struct, NAME_None, Vector2DStruct);
+			}))
+	);
+
+	Section.AddMenuEntry(
+		FName("FQuat"),
+		FText::FromString(TEXT("Quaternion")),
+		FText::FromString(TEXT("Set pin to FQuat")),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateLambda([MutableThis]() {
+			// Retrieve the UScriptStruct for FQuat
+			UScriptStruct* QuatStruct = TBaseStructure<FQuat>::Get();
+
+			// Apply the change to the wildcard pin
+			MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Struct, NAME_None, QuatStruct);
+			}))
+	);
+
+	Section.AddMenuEntry(
+		FName("FTransform"),
+		FText::FromString(TEXT("Transform")),
+		FText::FromString(TEXT("Set pin to FTransform")),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateLambda([MutableThis]() {
+			// Retrieve the UScriptStruct for FTransform
+			UScriptStruct* TransformStruct = TBaseStructure<FTransform>::Get();
+
+			// Apply the change
+			MutableThis->ChangeWildcardPinType(UEdGraphSchema_K2::PC_Struct, NAME_None, TransformStruct);
+			}))
+	);
 }
 
 void UK2Node_SetDynamicValue::ChangeWildcardPinType(FName PinCategory, FName PinSubCategory, UObject* Object)
@@ -170,7 +242,9 @@ void UK2Node_SetDynamicValue::NotifyPinConnectionListChanged(UEdGraphPin* Pin)
 {
 	Super::NotifyPinConnectionListChanged(Pin);
 	UEdGraphPin* InPin = FindPin(FName("In"));
+	UEdGraphPin* TagPin = FindPin(FName("Tag"));
 	if (!InPin) return;
+	if (!TagPin) return;
 	if (Pin != InPin) return;
 
 	// Update the input pin type based on connected output pin type
@@ -184,6 +258,11 @@ void UK2Node_SetDynamicValue::NotifyPinConnectionListChanged(UEdGraphPin* Pin)
 		if (SelectedCategory == UEdGraphSchema_K2::PC_Real && SelectedSubCategory == NAME_None)
 			SelectedSubCategory = UEdGraphSchema_K2::PC_Float;
 		InPin->PinType.PinSubCategory = SelectedSubCategory;
+
+		FGameplayTag Tag;
+		FGameplayTag::StaticStruct()->ImportText(*TagPin->GetDefaultAsString(), &Tag, nullptr, EPropertyPortFlags::PPF_None, GError, FGameplayTag::StaticStruct()->GetName());
+		if (!Tag.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid Tag to set")); BreakAllNodeLinks(); return; }
+		SetSettingStorage(Tag, SelectedCategory, SelectedSubCategory, SelectedObject);
 	}
 	else if (!InPin->DefaultValue.IsEmpty() && InPin->PinType.PinCategory != UEdGraphSchema_K2::PC_Wildcard)
 	{
@@ -207,4 +286,48 @@ void UK2Node_SetDynamicValue::NotifyPinConnectionListChanged(UEdGraphPin* Pin)
 		}
 	}
 	GetGraph()->NotifyGraphChanged();
+}
+
+UProjectSetting* UK2Node_SetDynamicValue::GetProjectSetting()
+{
+	UProjectSetting* Setting = GetMutableDefault<UProjectSetting>();
+	if (Setting) {
+
+		return Setting;
+	}
+
+	return nullptr;
+}
+
+void UK2Node_SetDynamicValue::SetSettingStorage(FGameplayTag Tag, FName Category, FName SubCategory, UObject* SubCategoryObj)
+{
+	if (!Tag.IsValid() || !Category.IsValid() || !SubCategory.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid tag")); return; }
+	if (!Category.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid category")); return; }
+	if (!SubCategory.IsValid()) { UE_LOG(LogTemp, Log, TEXT("Invalid subcategory")); return; }
+	if (!SubCategoryObj) { UE_LOG(LogTemp, Log, TEXT("Invalid Object")); return; }
+
+	UProjectSetting* Setting = GetProjectSetting();
+	if (!Setting) { UE_LOG(LogTemp, Log, TEXT("Invalid Setting")); return; }
+
+	FStorageDefinition* Def = Setting->StorageRegistry.Find(Tag);
+	if (Def) {
+
+		Def->PinCategory = Category;
+		Def->PinSubCategory = SubCategory;
+		Def->PinSubObject = SubCategoryObj;
+
+		Setting->SaveConfig();
+		Setting->TryUpdateDefaultConfigFile();
+		return;
+	}
+
+	FStorageDefinition Val;
+	Val.PinCategory = Category;
+	Val.PinSubCategory = SubCategory;
+	Val.PinSubObject = SubCategoryObj;
+	UE_LOG(LogTemp, Log, TEXT("ADDED TO SETTING STORAGE............."));
+	Setting->StorageRegistry.Add(Tag, Val);
+	Setting->SaveConfig();
+	Setting->TryUpdateDefaultConfigFile();
+	return;
 }

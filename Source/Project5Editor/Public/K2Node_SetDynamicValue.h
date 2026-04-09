@@ -5,6 +5,8 @@
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "K2Node_SetDynamicValue.generated.h"
 
+class UProjectSetting;
+
 UCLASS()
 class PROJECT5EDITOR_API UK2Node_SetDynamicValue : public UK2Node
 {
@@ -23,6 +25,9 @@ public:
 	virtual void GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const override; // Func for adding context menu actions
 	virtual void PostReconstructNode() override; // Func for handling node reconstruction
 	virtual bool IsConnectionDisallowed(const UEdGraphPin* MyPin, const UEdGraphPin* OtherPin, FString& OutReason) const override; // Func for validating pin connections
+	
+	UProjectSetting* GetProjectSetting();
+	void SetSettingStorage(FGameplayTag Tag, FName Category, FName SubCategory, UObject* SubCategoryObj);
 
 private:
 	void ChangeWildcardPinType(FName PinCategory, FName PinSubCategory, UObject* Object);

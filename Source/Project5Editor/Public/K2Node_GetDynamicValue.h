@@ -5,6 +5,8 @@
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "K2Node_GetDynamicValue.generated.h"
 
+struct FStorageDefinition;
+
 UCLASS()
 class PROJECT5EDITOR_API UK2Node_GetDynamicValue : public UK2Node
 {
@@ -23,6 +25,10 @@ public:
 	virtual void NotifyPinConnectionListChanged(UEdGraphPin* Pin) override; // Func called when a pin's connection list changes
 	virtual void PostReconstructNode() override; // Func called after the node has been reconstructed
 	virtual bool IsConnectionDisallowed(const UEdGraphPin* MyPin, const UEdGraphPin* OtherPin, FString& OutReason) const override; // Func to determine if a connection between pins is disallowed
+	virtual void PinDefaultValueChanged(UEdGraphPin* Pin) override;
+
+	FStorageDefinition* GetSettingStorageData(FGameplayTag Tag);
+
 private:
 	void ChangeOutputPinType(FName NewCategory, FName NewSubCategory, UObject* NewTypeObject); // Base func to change output pintype
 	UPROPERTY() FName SelectedTypeName = NAME_None; // The datatype literal of active input pin
